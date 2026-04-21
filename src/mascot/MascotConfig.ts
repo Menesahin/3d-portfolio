@@ -45,29 +45,31 @@ export type MascotConfig = {
 };
 
 /**
- * RobotExpressive's clip names (per three.js repo):
- *   Idle · Walking · Running · Dance · Death · Sitting · Standing · Jump
- *   Wave · ThumbsUp · No · Yes · Punch
+ * Active mascot: `robot_playground.glb` (Hadrien59 / Sketchfab CC-BY,
+ * supplied by the user). 8.3 MB, 340 nodes, 68 meshes, single baked
+ * "Experiment" animation — the whole diorama plays it on loop.
  *
- * Mappings lean on obvious names; richer gestures (flip, shy, spin_happy)
- * are intentionally undefined so GlbMascot falls back to procedural cues.
+ * All logical gesture slots map to the same clip. GlbMascot falls
+ * back to the auto-clear timer when a gesture is fired — the robot
+ * just continues its Experiment loop while the emote icon carries
+ * the beat.
  */
 export const mascotConfig: MascotConfig = {
-  id: "robot-expressive",
-  assetUrl: "/models/robot-expressive.glb",
-  scale: 0.38,
+  id: "robot-playground",
+  assetUrl: "/models/robot-playground.glb",
+  scale: 0.35,
   hoverOffset: 0.05,
   gestureTimeScale: 1.0,
   animationMap: {
-    idle: "Idle",
-    walk: "Walking",
-    jump: "Jump",
-    wave: "Wave",
-    dance: "Dance",
-    thumbs_up: "ThumbsUp",
-    point: "Punch",
-    bow: "Yes",
-    head_tilt: "No",
+    idle: "Experiment",
+    walk: "Experiment",
+    jump: "Experiment",
+    wave: "Experiment",
+    dance: "Experiment",
+    thumbs_up: "Experiment",
+    point: "Experiment",
+    bow: "Experiment",
+    head_tilt: "Experiment",
   },
-  emoteAnchor: [0, 3.4, 0],
+  emoteAnchor: [0, 2.2, 0],
 };

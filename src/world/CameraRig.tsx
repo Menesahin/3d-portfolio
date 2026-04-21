@@ -12,11 +12,11 @@ import type { ZoneId } from "./zones";
  *
  * Park zone anchors (see zones.ts):
  *   hub        (0,  0,  0)
- *   gallery   (-14, 0, -8)
- *   projects  (+14, 0, -8)
- *   experience(-14, 0,  4)
- *   contact   (+14, 0,  4)
- *   skills    (0,   0, 10)
+ *   gallery   (-10, 0, -7)
+ *   projects  (+10, 0, -7)
+ *   experience(-10, 0,  4)
+ *   contact   (+10, 0,  4)
+ *   skills    (0,   0,  8)
  */
 const SHOTS: Record<
   ZoneId | "overview" | "hub",
@@ -25,13 +25,13 @@ const SHOTS: Record<
     target: [number, number, number];
   }
 > = {
-  overview: { pos: [0, 16, 26], target: [0, 1, 0] },
-  hub: { pos: [0, 3, 7], target: [0, 1.2, 0] },
-  gallery: { pos: [-14, 3.5, -1.5], target: [-14, 1, -8] },
-  projects: { pos: [14, 3.5, -1.5], target: [14, 1, -8] },
-  experience: { pos: [-14, 3.5, 11], target: [-14, 1.2, 4] },
-  contact: { pos: [14, 3.5, 11], target: [14, 1.2, 4] },
-  skills: { pos: [0, 4, 17], target: [0, 1.4, 10] },
+  overview: { pos: [0, 13, 20], target: [0, 1, 0] },
+  hub: { pos: [0, 3, 6], target: [0, 1.5, -1] },
+  gallery: { pos: [-10, 3, -1], target: [-10, 1.2, -7] },
+  projects: { pos: [10, 3, -1], target: [10, 1.2, -7] },
+  experience: { pos: [-10, 3, 10], target: [-10, 1.2, 4] },
+  contact: { pos: [10, 3, 10], target: [10, 1.2, 4] },
+  skills: { pos: [0, 3.5, 14], target: [0, 1.2, 8] },
 };
 
 const ZOOM_FACTORS = {

@@ -7,9 +7,9 @@ import { ZONES } from "../../zones";
 import { ZoneArea } from "../ZoneArea";
 
 /**
- * Contact — an info booth built from a castle tower base + banner
- * and flanked by two lanterns. Clicking the booth activates the
- * contact-card panel.
+ * Contact — an info booth made of a stone tower + a pennant + two
+ * flanking lanterns. Visitor benches on the front line. Clicking the
+ * booth activates the contact card.
  */
 export function ContactArea() {
   const theme = useActiveTheme();
@@ -26,51 +26,51 @@ export function ContactArea() {
   };
 
   return (
-    <ZoneArea id="contact" title="Contact" position={ZONES.contact.position} radius={5}>
-      {/* Central info booth */}
+    <ZoneArea id="contact" title="Contact" position={ZONES.contact.position} radius={4.4}>
+      {/* Central info booth — scaled up */}
       <group onClick={activate}>
         <GlbProp
           url="/models/props/kenney/tower-square-base.glb"
           position={[0, 0, 0]}
-          scale={1.1}
+          scale={1.6}
         />
-        <GlbProp url="/models/props/kenney/flag-pennant.glb" position={[0, 1.4, 0]} scale={0.9} />
+        <GlbProp url="/models/props/kenney/flag-pennant.glb" position={[0, 2.2, 0]} scale={1.2} />
       </group>
 
-      {/* Two lanterns flanking */}
-      <GlbProp url="/models/props/kenney/lantern.glb" position={[-1.8, 0, 0.8]} scale={0.7} />
-      <GlbProp url="/models/props/kenney/lantern.glb" position={[1.8, 0, 0.8]} scale={0.7} />
+      {/* Lanterns flanking the booth */}
+      <GlbProp url="/models/props/kenney/lantern.glb" position={[-2.4, 0, 0.5]} scale={0.9} />
+      <GlbProp url="/models/props/kenney/lantern.glb" position={[2.4, 0, 0.5]} scale={0.9} />
 
-      {/* Benches */}
+      {/* Visitor benches */}
       <GlbProp
         url="/models/props/kenney/bench.glb"
-        position={[-2.4, 0, 1.8]}
+        position={[-2.8, 0, 2.0]}
         rotation={[0, 0.5, 0]}
-        scale={1.0}
+        scale={1.3}
       />
       <GlbProp
         url="/models/props/kenney/bench.glb"
-        position={[2.4, 0, 1.8]}
+        position={[2.8, 0, 2.0]}
         rotation={[0, -0.5, 0]}
-        scale={1.0}
+        scale={1.3}
       />
 
-      {/* Mailbox sign emerges when active — shows contact text */}
+      {/* Contact text appears when terminal is active */}
       {terminalActive && (
         <>
           <Text
-            position={[0, 2.2, 0.5]}
-            fontSize={0.16}
+            position={[0, 3.0, 0.6]}
+            fontSize={0.2}
             color={theme.palette.ink}
             anchorX="center"
             anchorY="middle"
-            maxWidth={4}
+            maxWidth={5}
           >
             menesahin99@gmail.com
           </Text>
           <Text
-            position={[0, 1.95, 0.5]}
-            fontSize={0.14}
+            position={[0, 2.7, 0.6]}
+            fontSize={0.16}
             color={theme.palette.ink}
             fillOpacity={0.7}
             anchorX="center"

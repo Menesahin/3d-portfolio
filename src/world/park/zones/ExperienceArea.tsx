@@ -18,9 +18,9 @@ const COMPANIES: ReadonlyArray<{
 ];
 
 /**
- * Experience — three tall stele-style monoliths (castle tower stacks)
- * lined up with a pennant on each. Clicking a monolith activates its
- * company hologram + content card.
+ * Experience — three tall stacked-hexagon monoliths in a row, each
+ * with a pennant on top and a plaque stone at its foot. Towers are
+ * scaled so they read as monuments at overview distance (≈ 4 m tall).
  */
 export function ExperienceArea() {
   const theme = useActiveTheme();
@@ -34,46 +34,47 @@ export function ExperienceArea() {
   };
 
   return (
-    <ZoneArea id="experience" title="Experience" position={ZONES.experience.position} radius={5}>
-      {/* Path of stones behind */}
-      <GlbProp url="/models/props/kenney/rocks-small.glb" position={[-4, 0, 1.5]} scale={0.8} />
-      <GlbProp url="/models/props/kenney/rocks-small.glb" position={[4, 0, 1.5]} scale={0.8} />
-
+    <ZoneArea id="experience" title="Experience" position={ZONES.experience.position} radius={4.4}>
       {COMPANIES.map((c) => (
         <group key={c.id} position={[c.x, 0, 0]}>
-          {/* Stacked tower = tall monolith */}
           <group
             onClick={(e) => {
               e.stopPropagation();
               activate(c.id);
             }}
           >
+            {/* Stacked tower — stone plaque stone + 3 tower segments + flag. */}
+            <GlbProp
+              url="/models/props/kenney/rocks-small.glb"
+              position={[0, 0, 0.9]}
+              scale={0.6}
+            />
             <GlbProp
               url="/models/props/kenney/tower-hexagon-base.glb"
               position={[0, 0, 0]}
-              scale={0.75}
+              scale={1.1}
             />
             <GlbProp
               url="/models/props/kenney/tower-hexagon-mid.glb"
-              position={[0, 0.9, 0]}
-              scale={0.75}
+              position={[0, 1.35, 0]}
+              scale={1.1}
             />
             <GlbProp
               url="/models/props/kenney/tower-hexagon-top.glb"
-              position={[0, 1.8, 0]}
-              scale={0.75}
+              position={[0, 2.7, 0]}
+              scale={1.1}
             />
             <GlbProp
               url="/models/props/kenney/flag-pennant.glb"
-              position={[0, 2.6, 0]}
-              scale={0.7}
+              position={[0, 3.9, 0]}
+              scale={1.0}
             />
           </group>
-          {/* Label */}
+          {/* Front-facing labels */}
           <Text
-            position={[0, -0.2, 0.8]}
-            rotation={[-Math.PI / 4, 0, 0]}
-            fontSize={0.2}
+            position={[0, 0.25, 1.2]}
+            rotation={[-Math.PI / 6, 0, 0]}
+            fontSize={0.22}
             color={theme.palette.ink}
             anchorX="center"
             anchorY="middle"
@@ -82,9 +83,9 @@ export function ExperienceArea() {
             {c.label}
           </Text>
           <Text
-            position={[0, -0.45, 0.9]}
-            rotation={[-Math.PI / 4, 0, 0]}
-            fontSize={0.12}
+            position={[0, 0.05, 1.3]}
+            rotation={[-Math.PI / 6, 0, 0]}
+            fontSize={0.13}
             color={theme.palette.ink}
             anchorX="center"
             anchorY="middle"
@@ -95,9 +96,9 @@ export function ExperienceArea() {
         </group>
       ))}
 
-      {/* Lantern accents */}
-      <GlbProp url="/models/props/kenney/lantern.glb" position={[-3.5, 0, -1.2]} scale={0.6} />
-      <GlbProp url="/models/props/kenney/lantern.glb" position={[3.5, 0, -1.2]} scale={0.6} />
+      {/* Lanterns framing the row */}
+      <GlbProp url="/models/props/kenney/lantern.glb" position={[-4.0, 0, 0]} scale={0.85} />
+      <GlbProp url="/models/props/kenney/lantern.glb" position={[4.0, 0, 0]} scale={0.85} />
     </ZoneArea>
   );
 }

@@ -37,8 +37,8 @@ const KIOSKS: ReadonlyArray<{
 ];
 
 /**
- * Projects — three interactive kiosks (Kenney Mini-Arcade) side by
- * side. Clicking a kiosk opens its project content card.
+ * Projects — three arcade-kit kiosks side by side. Kiosks are scaled
+ * 1.4 (from 0.9) so they read as "booths", not "toys".
  */
 export function ProjectsArea() {
   const theme = useActiveTheme();
@@ -52,7 +52,7 @@ export function ProjectsArea() {
   };
 
   return (
-    <ZoneArea id="projects" title="Projects" position={ZONES.projects.position} radius={5}>
+    <ZoneArea id="projects" title="Projects" position={ZONES.projects.position} radius={4.4}>
       {KIOSKS.map((k) => (
         <group key={k.id} position={[k.x, 0, 0]}>
           <group
@@ -61,11 +61,11 @@ export function ProjectsArea() {
               activate(k.id);
             }}
           >
-            <GlbProp url={k.model} position={[0, 0, 0]} scale={0.9} />
+            <GlbProp url={k.model} position={[0, 0, 0]} scale={1.4} />
           </group>
           <Text
-            position={[0, 2.4, 0]}
-            fontSize={0.22}
+            position={[0, 3.0, 0.3]}
+            fontSize={0.24}
             color={theme.palette.ink}
             anchorX="center"
             anchorY="middle"
@@ -74,8 +74,8 @@ export function ProjectsArea() {
             {k.label}
           </Text>
           <Text
-            position={[0, 2.15, 0]}
-            fontSize={0.13}
+            position={[0, 2.7, 0.3]}
+            fontSize={0.14}
             color={theme.palette.ink}
             anchorX="center"
             anchorY="middle"
@@ -86,17 +86,9 @@ export function ProjectsArea() {
         </group>
       ))}
 
-      {/* Lamps on the corners */}
-      <GlbProp
-        url="/models/props/kenney/lampRoundFloor.glb"
-        position={[-4.2, 0, -1.4]}
-        scale={1.2}
-      />
-      <GlbProp
-        url="/models/props/kenney/lampRoundFloor.glb"
-        position={[4.2, 0, -1.4]}
-        scale={1.2}
-      />
+      {/* Lamps on the ends */}
+      <GlbProp url="/models/props/kenney/lampRoundFloor.glb" position={[-4.2, 0, 0]} scale={1.3} />
+      <GlbProp url="/models/props/kenney/lampRoundFloor.glb" position={[4.2, 0, 0]} scale={1.3} />
     </ZoneArea>
   );
 }

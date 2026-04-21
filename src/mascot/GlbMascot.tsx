@@ -7,20 +7,20 @@ import type { AnimationMap, MascotConfig } from "./MascotConfig";
 type Props = { config: MascotConfig & { assetUrl: string } };
 
 // Preload at module scope — the GLB fetches while the route JS evaluates.
-useGLTF.preload("/models/robot-expressive.glb");
+useGLTF.preload("/models/robot-playground.glb");
 
 /**
- * GLB-backed mascot. Crossfades idle↔walk based on movement, and plays
- * mapped clips when a gesture is requested. Falls back silently when a
- * gesture has no clip (the ProceduralMascot provides richer motion for
- * those, but for the GLB we just let the emote icon carry it).
+ * GLB-backed mascot. Plays whichever single clip the config maps idle
+ * to as a continuous loop (the playground GLB's "Experiment" animation
+ * is a self-contained mini-scene — no crossfade needed). Gesture
+ * requests still clear themselves via the auto-timer so emotes stay in
+ * step even when the robot's own animation is unchanged.
  */
 export function GlbMascot({ config }: Props) {
   const group = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF(config.assetUrl);
   const { actions } = useAnimations(animations, group);
 
-  const state = useStore((s) => s.mascot.state);
   const gesture = useStore((s) => s.mascot.gesture);
   const setGesture = useStore((s) => s.setGesture);
 
@@ -33,27 +33,16 @@ export function GlbMascot({ config }: Props) {
     });
   }, [scene]);
 
-  // Base loop — idle when still, walk when moving.
+  // Base loop — play idle (or the only clip) continuously.
   useEffect(() => {
     const idleName = config.animationMap.idle;
-    const walkName = config.animationMap.walk;
     const idle = actions[idleName];
-    const walk = actions[walkName];
-    if (!idle || !walk) return;
-
-    if (state === "moving") {
-      idle.fadeOut(0.25);
-      walk.reset().fadeIn(0.25).play();
-      return () => {
-        walk.fadeOut(0.25);
-      };
-    }
-    walk.fadeOut(0.25);
-    idle.reset().fadeIn(0.25).play();
+    if (!idle) return;
+    idle.reset().fadeIn(0.3).play();
     return () => {
       idle.fadeOut(0.25);
     };
-  }, [actions, config.animationMap, state]);
+  }, [actions, config.animationMap]);
 
   // Gesture overlay — plays the mapped clip once then auto-clears store.
   useEffect(() => {

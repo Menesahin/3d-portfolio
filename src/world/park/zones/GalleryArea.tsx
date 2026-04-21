@@ -3,52 +3,69 @@ import { ZONES } from "../../zones";
 import { ZoneArea } from "../ZoneArea";
 
 /**
- * Gallery — an outdoor sculpture garden. Each "sculpture" is a
- * distinct Kenney GLB to give the garden variety. Surrounded by
- * trees + flowers + a bench for contemplation.
+ * Gallery — outdoor sculpture garden with four distinct Kenney
+ * sculptures on plinth stones, ringed by flora and backed by a
+ * viewing bench. Everything scaled up so silhouettes read at
+ * overview distance.
  */
 export function GalleryArea() {
   return (
-    <ZoneArea id="gallery" title="Gallery" position={ZONES.gallery.position} radius={5}>
-      {/* Four sculptures arranged roughly like a quad plinth set */}
+    <ZoneArea id="gallery" title="Gallery" position={ZONES.gallery.position} radius={4.4}>
+      {/* Four sculptures in a quad arrangement, each on a small plinth. */}
+      <GlbProp url="/models/props/kenney/rocks-small.glb" position={[-2.4, 0, -0.5]} scale={0.9} />
       <GlbProp
         url="/models/props/kenney/tower-hexagon-top.glb"
-        position={[-2.2, 0, 0]}
-        scale={0.9}
+        position={[-2.4, 0.3, -0.5]}
+        scale={1.3}
       />
-      <GlbProp url="/models/props/kenney/rocks-large.glb" position={[-0.6, 0, -0.8]} scale={0.9} />
+
+      <GlbProp url="/models/props/kenney/rocks-small.glb" position={[-0.7, 0, -0.5]} scale={0.9} />
+      <GlbProp
+        url="/models/props/kenney/rocks-large.glb"
+        position={[-0.7, 0.3, -0.5]}
+        scale={1.1}
+      />
+
+      <GlbProp url="/models/props/kenney/rocks-small.glb" position={[1.0, 0, -0.5]} scale={0.9} />
       <GlbProp
         url="/models/props/kenney/tower-square-arch.glb"
-        position={[1.4, 0, 0]}
-        scale={0.8}
+        position={[1.0, 0.3, -0.5]}
+        scale={1.2}
       />
+
+      <GlbProp url="/models/props/kenney/rocks-small.glb" position={[2.7, 0, -0.5]} scale={0.9} />
       <GlbProp
         url="/models/props/kenney/tower-square-base-border.glb"
-        position={[2.8, 0, -0.6]}
-        scale={0.9}
+        position={[2.7, 0.3, -0.5]}
+        scale={1.3}
       />
 
-      {/* Surrounding trees + flora */}
-      <GlbProp url="/models/props/kenney/tree_fat.glb" position={[-3.8, 0, 1.6]} scale={1.1} />
-      <GlbProp url="/models/props/kenney/tree_oak.glb" position={[3.8, 0, 1.6]} scale={1.1} />
-      <GlbProp
-        url="/models/props/kenney/plant_bushDetailed.glb"
-        position={[0, 0, 2.0]}
-        scale={0.9}
-      />
-      <GlbProp
-        url="/models/props/kenney/flower_yellowA.glb"
-        position={[-1.5, 0, 1.6]}
-        scale={0.9}
-      />
-      <GlbProp url="/models/props/kenney/flower_purpleA.glb" position={[1.5, 0, 1.6]} scale={0.9} />
-
-      {/* Visitor bench */}
+      {/* Viewing bench in front */}
       <GlbProp
         url="/models/props/kenney/bench.glb"
-        position={[0, 0, 2.6]}
+        position={[0, 0, 2.2]}
         rotation={[0, Math.PI, 0]}
+        scale={1.4}
+      />
+
+      {/* Flora accents */}
+      <GlbProp
+        url="/models/props/kenney/flower_yellowA.glb"
+        position={[-3.4, 0, 1.2]}
         scale={1.1}
+      />
+      <GlbProp url="/models/props/kenney/flower_purpleA.glb" position={[3.4, 0, 1.2]} scale={1.1} />
+
+      {/* Floor lamps for evening reads */}
+      <GlbProp
+        url="/models/props/kenney/lampRoundFloor.glb"
+        position={[-3.6, 0, -0.3]}
+        scale={1.2}
+      />
+      <GlbProp
+        url="/models/props/kenney/lampRoundFloor.glb"
+        position={[3.6, 0, -0.3]}
+        scale={1.2}
       />
     </ZoneArea>
   );
