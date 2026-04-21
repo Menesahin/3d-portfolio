@@ -20,7 +20,8 @@
       },
       "a11y": {
         "useSemanticElements": "off",
-        "useValidAriaRole": "off"
+        "useValidAriaRole": "off",
+        "noStaticElementInteractions": "off"
       },
       "suspicious": {
         "noExplicitAny": "warn",

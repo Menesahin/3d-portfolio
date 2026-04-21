@@ -2,6 +2,7 @@ import { Text } from "@react-three/drei";
 import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { useT } from "@/hooks/useT";
 import { Island } from "../Island";
+import { IslandDecor } from "../props/IslandDecor";
 import { ZONES } from "../zones";
 
 export function Hub() {
@@ -9,6 +10,8 @@ export function Hub() {
   const t = useT();
   return (
     <Island id="hub" position={ZONES.hub.position} radius={2.8}>
+      <IslandDecor variant="crystals" position={[1.8, 0.25, 0.5]} scale={1.1} />
+      <IslandDecor variant="crystals" position={[-1.9, 0.25, -0.6]} scale={0.85} />
       {/* Raised well above the mascot (head reaches ~y=1.6) */}
       <Text
         position={[0, 2.9, 0]}

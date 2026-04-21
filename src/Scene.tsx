@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Suspense } from "react";
 import * as THREE from "three";
+import { useStore } from "@/stores";
 import { PostFX } from "@/world/PostFX";
 import { WorldScene } from "@/world/WorldScene";
 
@@ -8,6 +9,10 @@ import { WorldScene } from "@/world/WorldScene";
  * Top-level R3F surface. Bundled separately via `React.lazy` so the heavy
  * three + r3f + drei chunk only loads after the initial HTML paint (see
  * plan §9.9 — code splitting).
+ *
+ * `onPointerMissed` fires when the user clicks empty sky / ground — we
+ * use it to pull the camera back to the overview shot, giving visitors
+ * an obvious "reset" without a button.
  */
 export default function Scene() {
   return (
@@ -28,6 +33,9 @@ export default function Scene() {
         gl.outputColorSpace = THREE.SRGBColorSpace;
       }}
       camera={{ position: [0, 12, 22], fov: 45, near: 0.1, far: 300 }}
+      onPointerMissed={() => {
+        useStore.getState().applyUiEvent({ kind: "camera.focus", target: "overview" });
+      }}
     >
       <Suspense fallback={null}>
         <WorldScene />

@@ -1,4 +1,5 @@
 import { CameraControls } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useStore } from "@/stores";
@@ -28,9 +29,12 @@ const ZOOM_FACTORS = {
 } as const;
 
 /**
- * The camera is fully chat-driven. We read `world.cameraTarget` and
- * `world.cameraZoom` from the store and fly the camera there with
- * a smooth dolly. Under `prefers-reduced-motion`, we snap instead.
+ * Camera logic:
+ *  - Chat-driven: when `world.cameraTarget` / `world.cameraZoom` change, we
+ *    smoothly dolly the camera to the matching shot.
+ *  - Reduced-motion: cuts straight to the target (no transition).
+ *  - Idle drift: while no transition is active, we apply a very small
+ *    azimuth oscillation so the scene feels alive instead of frozen.
  */
 export function CameraRig() {
   const controlsRef = useRef<CameraControls>(null);
@@ -44,7 +48,6 @@ export function CameraRig() {
     if (!cc) return;
     const shot = SHOTS[target] ?? SHOTS.overview;
     const factor = ZOOM_FACTORS[zoom];
-    // Scale the camera distance vector around the target by `factor`.
     const [tx, ty, tz] = shot.target;
     const [px, py, pz] = shot.pos;
     const dx = (px - tx) * factor;
@@ -53,6 +56,26 @@ export function CameraRig() {
     cc.smoothTime = reduceMotion ? 0 : 1.2;
     void cc.setLookAt(tx + dx, ty + dy, tz + dz, tx, ty, tz, !reduceMotion);
   }, [target, zoom, reduceMotion]);
+
+  // Idle drift — tiny azimuth oscillation while the rig isn't transitioning.
+  const prevOffset = useRef(0);
+  useFrame((state) => {
+    const cc = controlsRef.current;
+    if (!cc || reduceMotion) {
+      prevOffset.current = 0;
+      return;
+    }
+    // `active` is true while a smooth setLookAt transition is mid-flight.
+    if (cc.active) {
+      prevOffset.current = 0;
+      return;
+    }
+    const t = state.clock.elapsedTime;
+    const desired = Math.sin(t * 0.25) * 0.025; // ~1.4° oscillation
+    const delta = desired - prevOffset.current;
+    prevOffset.current = desired;
+    cc.rotate(delta, 0, false);
+  });
 
   return (
     <CameraControls

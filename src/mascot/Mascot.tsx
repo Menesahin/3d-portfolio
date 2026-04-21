@@ -1,6 +1,7 @@
-import { useFrame } from "@react-three/fiber";
+import { type ThreeEvent, useFrame } from "@react-three/fiber";
 import { Suspense, useRef } from "react";
 import * as THREE from "three";
+import { useHover } from "@/hooks/useHover";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useStore } from "@/stores";
 import { ZONES } from "@/world/zones";
@@ -22,6 +23,14 @@ export function Mascot() {
   const currentZone = useStore((s) => s.mascot.currentZone);
   const targetZone = useStore((s) => s.mascot.targetZone);
   const arriveAtZone = useStore((s) => s.arriveAtZone);
+  const hover = useHover();
+
+  const handleMascotClick = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    const apply = useStore.getState().applyUiEvent;
+    apply({ kind: "mascot.gesture", gesture: "wave" });
+    apply({ kind: "mascot.emote", icon: "sparkle" });
+  };
 
   useFrame((state, dt) => {
     if (!group.current) return;
@@ -55,7 +64,12 @@ export function Mascot() {
   });
 
   return (
-    <group ref={group}>
+    <group
+      ref={group}
+      onClick={handleMascotClick}
+      onPointerOver={hover.onPointerOver}
+      onPointerOut={hover.onPointerOut}
+    >
       {mascotConfig.assetUrl ? (
         <Suspense fallback={<ProceduralMascot />}>
           <GlbMascot config={{ ...mascotConfig, assetUrl: mascotConfig.assetUrl }} />

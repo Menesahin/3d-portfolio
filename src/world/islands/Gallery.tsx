@@ -1,5 +1,6 @@
 import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { Island } from "../Island";
+import { IslandDecor } from "../props/IslandDecor";
 import { ZONES } from "../zones";
 
 // Frame positions (x offset) + slight tilt variation so the wall feels hand-hung.
@@ -15,6 +16,8 @@ export function Gallery() {
 
   return (
     <Island id="gallery" title="Gallery" position={ZONES.gallery.position} radius={2.9}>
+      <IslandDecor variant="plant" position={[-2.3, 0.25, 1.2]} scale={1.1} />
+      <IslandDecor variant="plant" position={[2.3, 0.25, 1.2]} scale={0.9} />
       {FRAMES.map((f) => {
         const w = f.ratio === "portrait" ? 0.55 : 0.8;
         const h = f.ratio === "portrait" ? 0.8 : 0.55;
