@@ -15,6 +15,7 @@ import { Projects } from "./islands/Projects";
 import { Skills } from "./islands/Skills";
 import { Lighting } from "./Lighting";
 import { Particles } from "./Particles";
+import { AmbientFlyers } from "./props/AmbientFlyers";
 import { Sky } from "./Sky";
 import { ZoneSpotlight } from "./ZoneSpotlight";
 
@@ -71,6 +72,7 @@ export function WorldScene() {
 
       <Hologram />
       <Mascot />
+      <AmbientFlyers />
 
       <CameraRig />
     </>

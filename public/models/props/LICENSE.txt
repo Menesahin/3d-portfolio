@@ -1,0 +1,24 @@
+Third-party 3D assets used in this scene
+=========================================
+
+damaged-helmet.glb
+  Source  : Khronos glTF-Sample-Assets repository (DamagedHelmet)
+  URL     : https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/DamagedHelmet
+  License : CC BY-NC 4.0 (attribution + non-commercial)
+  Notes   : Used as the decorative hero exhibit at the Skills island.
+            Original author: ctxwing / theblueturtle_ (via Sketchfab).
+
+duck.glb
+  Source  : Khronos glTF-Sample-Assets repository (Duck)
+  URL     : https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Duck
+  License : CC BY 4.0 — "Author: Sony Computer Entertainment Inc."
+  Notes   : Used as a small Hub ornament (rubber-duck-debugging reference).
+
+parrot.glb
+  Source  : three.js examples
+  URL     : https://github.com/mrdoob/three.js/blob/master/examples/models/gltf/Parrot.glb
+  License : Royalty-free / MIT (three.js repo)
+  Notes   : Used as an ambient flying creature drifting above the scene.
+
+Attribution is surfaced in the site footer (`src/ui/Footer.tsx`) and the
+site credits page if one is ever added.

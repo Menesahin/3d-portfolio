@@ -1,6 +1,7 @@
 import { Billboard, Text } from "@react-three/drei";
 import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { Island } from "../Island";
+import { SkillsExhibit } from "../props/SkillsExhibit";
 import { SkillsCanopy } from "../props/ZoneStaging";
 import { ZONES } from "../zones";
 
@@ -17,6 +18,7 @@ export function Skills() {
   return (
     <Island id="skills" title="Skills" position={ZONES.skills.position} radius={2.8}>
       <SkillsCanopy />
+      <SkillsExhibit />
       {groups.map((g) => {
         const x = Math.cos(g.angle) * r;
         const z = Math.sin(g.angle) * r;
