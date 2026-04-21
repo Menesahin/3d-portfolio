@@ -27,7 +27,7 @@ export type ChatSlice = {
 export const createChatSlice: StateCreator<ChatSlice, [], [], ChatSlice> = (set, get) => ({
   chat: {
     messages: [],
-    isOpen: false,
+    isOpen: false, // default collapsed — dock is a pill until clicked
     isStreaming: false,
     abortController: null,
   },

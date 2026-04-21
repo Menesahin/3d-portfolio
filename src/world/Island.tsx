@@ -1,3 +1,4 @@
+import { Billboard, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -9,6 +10,8 @@ type IslandProps = {
   id: ZoneId;
   position: readonly [number, number, number];
   radius?: number;
+  /** Optional overhead label — rendered as a billboard so it's always readable. */
+  title?: string;
   children?: React.ReactNode;
 };
 
@@ -17,7 +20,7 @@ type IslandProps = {
  * that hosts plinths / decorations. Gently bobs in world space. Glows
  * softly when highlighted by a tool call.
  */
-export function Island({ id, position, radius = 2.2, children }: IslandProps) {
+export function Island({ id, position, radius = 2.2, title, children }: IslandProps) {
   const theme = useActiveTheme();
   const group = useRef<THREE.Group>(null);
   const topMat = useRef<THREE.MeshStandardMaterial>(null);
@@ -77,6 +80,22 @@ export function Island({ id, position, radius = 2.2, children }: IslandProps) {
           emissiveIntensity={0}
         />
       </mesh>
+
+      {/* Overhead billboard label */}
+      {title && (
+        <Billboard position={[0, radius + 0.6, 0]}>
+          <Text
+            fontSize={0.34}
+            color={theme.palette.ink}
+            fillOpacity={0.9}
+            anchorX="center"
+            anchorY="middle"
+            letterSpacing={0.05}
+          >
+            {title.toUpperCase()}
+          </Text>
+        </Billboard>
+      )}
 
       {children}
     </group>

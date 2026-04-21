@@ -9,18 +9,19 @@ export function Hub() {
   const t = useT();
   return (
     <Island id="hub" position={ZONES.hub.position} radius={2.8}>
+      {/* Raised well above the mascot (head reaches ~y=1.6) */}
       <Text
-        position={[0, 1.1, 0]}
-        fontSize={0.32}
+        position={[0, 2.9, 0]}
+        fontSize={0.36}
         color={theme.palette.ink}
         anchorX="center"
         anchorY="middle"
-        maxWidth={5}
+        maxWidth={6}
       >
         {t.meta.name}
       </Text>
       <Text
-        position={[0, 0.72, 0]}
+        position={[0, 2.5, 0]}
         fontSize={0.18}
         color={theme.palette.ink}
         anchorX="center"

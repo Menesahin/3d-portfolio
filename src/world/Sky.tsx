@@ -36,12 +36,14 @@ export function Sky() {
   });
 
   return (
-    <mesh scale={[-1, 1, 1]}>
-      <sphereGeometry args={[200, 32, 16]} />
+    <mesh scale={[-1, 1, 1]} renderOrder={-1}>
+      {/* Higher segment count to avoid triangle artifacts near the poles */}
+      <sphereGeometry args={[150, 96, 48]} />
       <shaderMaterial
         ref={ref}
         side={THREE.BackSide}
         depthWrite={false}
+        depthTest={false}
         uniforms={uniforms}
         vertexShader={`
           varying vec3 vPos;
@@ -55,8 +57,9 @@ export function Sky() {
           uniform vec3 uTop;
           uniform vec3 uBottom;
           void main() {
-            float t = clamp((vPos.y / 200.0) * 0.5 + 0.5, 0.0, 1.0);
-            vec3 col = mix(uBottom, uTop, pow(t, 0.75));
+            // Normalise world-space Y to [0,1] then apply a gentle curve.
+            float t = clamp((vPos.y / 150.0) * 0.5 + 0.5, 0.0, 1.0);
+            vec3 col = mix(uBottom, uTop, pow(t, 0.8));
             gl_FragColor = vec4(col, 1.0);
           }
         `}

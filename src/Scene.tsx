@@ -27,7 +27,7 @@ export default function Scene() {
         gl.toneMappingExposure = 1.0;
         gl.outputColorSpace = THREE.SRGBColorSpace;
       }}
-      camera={{ position: [0, 12, 22], fov: 45, near: 0.1, far: 200 }}
+      camera={{ position: [0, 12, 22], fov: 45, near: 0.1, far: 300 }}
     >
       <Suspense fallback={null}>
         <WorldScene />

@@ -10,8 +10,21 @@ import { SplashScreen } from "@/ui/SplashScreen";
 import { ThemeToggle } from "@/ui/ThemeToggle";
 
 const Scene = lazy(() => import("./Scene"));
+const ChatLab = lazy(() => import("./chat-lab/ChatLab"));
 
 export default function App() {
+  // Dev-only /chat-lab route (phase-2 contract test). No router — single check.
+  if (typeof window !== "undefined" && window.location.pathname === "/chat-lab") {
+    return (
+      <Suspense fallback={<SplashScreen />}>
+        <ChatLab />
+      </Suspense>
+    );
+  }
+  return <Portfolio />;
+}
+
+function Portfolio() {
   const t = useT();
   const lang = useStore((s) => s.lang);
   const debug = useDebugMode();

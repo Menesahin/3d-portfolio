@@ -1,0 +1,83 @@
+"""SSE contract test — proves the /chat endpoint shape without touching OpenAI.
+
+The real graph is replaced via `app.dependency_overrides[get_graph]` with a
+tiny stub that emits a scripted mix of token + ui events. Per plan §8.12 we
+cap the stream with a sentinel `done` event so `httpx.ASGITransport` can't
+hang (see httpx#2186).
+"""
+from collections.abc import AsyncIterator
+from typing import Any
+
+import httpx
+import pytest
+from httpx import ASGITransport
+
+from app.agent.events import CameraFocus, MascotMove
+from app.deps import get_graph
+
+
+class StubGraph:
+    """Pretends to be a LangGraph `CompiledStateGraph`. Only implements
+    `.astream(...)` — the only method `api/chat.py` calls."""
+
+    async def astream(
+        self,
+        _inputs: dict[str, Any],
+        **_kwargs: Any,
+    ) -> AsyncIterator[tuple[str, Any]]:
+        # Mirror real LangGraph's stream_mode=["messages","custom"] output shape.
+
+        # 1. custom event (UI tool fire)
+        yield ("custom", CameraFocus(target="projects").model_dump(mode="json"))
+        yield ("custom", MascotMove(zone="projects").model_dump(mode="json"))
+
+        # 2. token chunks from the agent node (narrative reply)
+        class _Chunk:
+            content = "Hi "
+
+        yield ("messages", (_Chunk(), {"langgraph_node": "agent"}))
+
+        class _Chunk2:
+            content = "there."
+
+        yield ("messages", (_Chunk2(), {"langgraph_node": "agent"}))
+
+
+@pytest.mark.asyncio
+async def test_should_stream_ready_token_ui_and_done_when_chat_invoked() -> None:
+    from app.main import app
+
+    app.dependency_overrides[get_graph] = lambda: StubGraph()
+
+    transport = ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+        async with ac.stream(
+            "POST",
+            "/chat",
+            json={"messages": [{"role": "user", "content": "hi"}]},
+        ) as r:
+            assert r.status_code == 200
+            events: list[str] = []
+            async for line in r.aiter_lines():
+                if line.startswith("event:"):
+                    events.append(line.split(":", 1)[1].strip())
+                if '"type": "done"' in line:
+                    break
+
+    app.dependency_overrides.clear()
+
+    assert events[0] == "ready"
+    assert "ui" in events
+    assert "token" in events
+    assert events[-1] == "done"
+
+
+@pytest.mark.asyncio
+async def test_should_return_200_on_health() -> None:
+    from app.main import app
+
+    transport = ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+        r = await ac.get("/health")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}

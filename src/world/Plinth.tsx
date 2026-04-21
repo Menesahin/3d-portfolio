@@ -1,4 +1,4 @@
-import { Text } from "@react-three/drei";
+import { Billboard, Text } from "@react-three/drei";
 import { useActiveTheme } from "@/hooks/useActiveTheme";
 
 type PlinthProps = {
@@ -35,29 +35,32 @@ export function Plinth({
         />
       </mesh>
 
-      <Text
-        position={[0, height + 0.45, 0]}
-        fontSize={0.22}
-        color={theme.palette.ink}
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={width * 2}
-      >
-        {label}
-      </Text>
-      {sublabel && (
+      {/* Billboarded so labels stay legible as the camera flies around. */}
+      <Billboard position={[0, height + 0.55, 0]}>
         <Text
-          position={[0, height + 0.2, 0]}
-          fontSize={0.13}
+          fontSize={0.22}
           color={theme.palette.ink}
           anchorX="center"
           anchorY="middle"
-          maxWidth={width * 2.2}
-          fillOpacity={0.7}
+          maxWidth={width * 1.6}
+          fontWeight={600}
         >
-          {sublabel}
+          {label}
         </Text>
-      )}
+        {sublabel && (
+          <Text
+            position={[0, -0.22, 0]}
+            fontSize={0.13}
+            color={theme.palette.ink}
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={width * 1.8}
+            fillOpacity={0.6}
+          >
+            {sublabel}
+          </Text>
+        )}
+      </Billboard>
     </group>
   );
 }

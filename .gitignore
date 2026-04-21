@@ -33,8 +33,12 @@ test-results
 # ts build info
 *.tsbuildinfo
 
-# backend (added later)
+# backend
 backend/.venv
-backend/__pycache__
-backend/.pytest_cache
-backend/*.egg-info
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.ruff_cache
+.mypy_cache
+*.egg-info

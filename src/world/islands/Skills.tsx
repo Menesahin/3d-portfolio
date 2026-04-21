@@ -1,4 +1,4 @@
-import { Text } from "@react-three/drei";
+import { Billboard, Text } from "@react-three/drei";
 import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { Island } from "../Island";
 import { ZONES } from "../zones";
@@ -12,33 +12,35 @@ const groups = [
 
 export function Skills() {
   const theme = useActiveTheme();
-  const r = 1.4;
+  const r = 2.0;
   return (
-    <Island id="skills" position={ZONES.skills.position} radius={2.4}>
+    <Island id="skills" title="Skills" position={ZONES.skills.position} radius={2.8}>
       {groups.map((g) => {
         const x = Math.cos(g.angle) * r;
         const z = Math.sin(g.angle) * r;
         return (
-          <group key={g.id} position={[x, 0.6, z]}>
+          <group key={g.id} position={[x, 0.7, z]}>
             <mesh castShadow>
-              <icosahedronGeometry args={[0.28, 0]} />
+              <icosahedronGeometry args={[0.32, 0]} />
               <meshStandardMaterial
                 color={theme.palette.accent}
                 emissive={theme.palette.accent}
-                emissiveIntensity={theme.id === "cyber" ? 0.5 : 0.12}
-                roughness={0.4}
-                metalness={0.25}
+                emissiveIntensity={theme.id === "cyber" ? 0.6 : 0.15}
+                roughness={0.35}
+                metalness={0.3}
               />
             </mesh>
-            <Text
-              position={[0, 0.58, 0]}
-              fontSize={0.14}
-              color={theme.palette.ink}
-              anchorX="center"
-              anchorY="middle"
-            >
-              {g.label}
-            </Text>
+            <Billboard position={[0, 0.6, 0]}>
+              <Text
+                fontSize={0.2}
+                color={theme.palette.ink}
+                anchorX="center"
+                anchorY="middle"
+                fontWeight={600}
+              >
+                {g.label}
+              </Text>
+            </Billboard>
           </group>
         );
       })}

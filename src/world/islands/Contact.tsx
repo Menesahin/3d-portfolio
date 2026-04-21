@@ -9,7 +9,7 @@ export function Contact() {
   const active = useStore((s) => s.world.terminalActive);
 
   return (
-    <Island id="contact" position={ZONES.contact.position} radius={2.2}>
+    <Island id="contact" title="Contact" position={ZONES.contact.position} radius={2.4}>
       {/* Terminal: thin tower with a glowing screen */}
       <group position={[0, 0.6, 0]}>
         <mesh castShadow>
