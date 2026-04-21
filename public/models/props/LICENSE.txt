@@ -1,36 +1,51 @@
 Third-party 3D assets used in this scene
 =========================================
 
-The scene now commits to a single visual family: Kenney's flat-shaded
-low-poly CC0 aesthetic. Every downloaded GLB below ships under CC0
-1.0 Universal (public domain, no attribution required).
+The scene commits to a single visual family: Kenney flat-shaded CC0
+low-poly. Every downloaded GLB below ships under CC0 1.0 Universal
+(public domain, no attribution required).
 
-kenney/ (Kenney "Nature Kit")
-  Source  : https://kenney.nl/assets/nature-kit
-  License : CC0 1.0 Universal
-  Files   : tree_oak, tree_fat, plant_bushDetailed, plant_bushLarge,
-            flower_yellowA, flower_purpleA, flower_redA, mushroom_red,
-            mushroom_tanGroup, campfire_stones, rock_largeA, log_stack
-  Usage   : Hub, Gallery, Experience, Contact organic detail.
+The old "floating-islands-with-tables" layout was retired and replaced
+by an outdoor exposition park — continuous grass ground, stone paths
+connecting six ground-level zones (Hub / Gallery / Projects / Skills /
+Experience / Contact). Every prop in every zone is a Kenney GLB;
+procedural arches / posters / plinths were removed wholesale.
 
-kenney/ (Kenney "Space Kit")
-  Source  : https://kenney.nl/assets/space-kit
-  License : CC0 1.0 Universal
-  Files   : satelliteDish_detailed, astronautA, craft_speederA, meteor_detailed
-  Usage   : satelliteDish_detailed — Skills hero centerpiece (floating,
-            rotating — replaces the retired DamagedHelmet PBR hero).
-            astronautA — Hub easter egg beside the mascot (replaces the
-            retired Khronos Duck).
-            craft_speederA — ambient flyer orbiting the scene (replaces
-            the retired three.js Parrot).
-            meteor_detailed — preloaded; reserved for future decor.
+kenney/ (Nature Kit)           — https://kenney.nl/assets/nature-kit
+  tree_oak, tree_fat, plant_bushDetailed, plant_bushLarge,
+  flower_yellowA, flower_purpleA, flower_redA, mushroom_red,
+  mushroom_tanGroup, campfire_stones, rock_largeA, log_stack,
+  ground_grass, ground_pathOpen, ground_pathCorner, ground_pathCross,
+  ground_pathEnd, ground_pathBend
+  Usage: ground grass, path tiles, scatter flora across the park and
+  inside each zone.
 
-kenney/ (Kenney "Mini-Arcade")
-  Source  : https://kenney.nl/assets/mini-arcade
-  License : CC0 1.0 Universal
-  Files   : arcade-machine, pinball
-  Usage   : Flanking props on the Projects island — "retro tech exhibit"
-            framing for the three project plinths.
+kenney/ (Castle Kit)           — https://kenney.nl/assets/castle-kit
+  tower-square-base, tower-square-base-border, tower-square-arch,
+  tower-hexagon-base, tower-hexagon-mid, tower-hexagon-top,
+  flag-pennant, rocks-large, rocks-small, gate, stairs-stone,
+  ground-hills
+  Usage: Hub welcome gate, Experience monoliths (hex-tower stacks
+  with pennants), Gallery sculptures, Contact info booth.
+
+kenney/ (Furniture Kit)        — https://kenney.nl/assets/furniture-kit
+  bench, benchCushion, lampRoundFloor, lampRoundTable,
+  plantSmall1, plantSmall2, plantSmall3
+  Usage: benches + lamps around Hub and Contact, potted plants.
+
+kenney/ (Holiday Kit)          — https://kenney.nl/assets/holiday-kit
+  lantern, lantern-hanging
+  Usage: Contact lanterns flanking the info booth.
+
+kenney/ (Space Kit)            — https://kenney.nl/assets/space-kit
+  satelliteDish_detailed, astronautA, craft_speederA, meteor_detailed
+  Usage: satelliteDish_detailed — Skills "AI / LLM" skill monument.
+         astronautA — Hub companion next to the mascot.
+         craft_speederA — ambient flyer orbiting the scene.
+
+kenney/ (Mini-Arcade)          — https://kenney.nl/assets/mini-arcade
+  arcade-machine, pinball, ticket-machine
+  Usage: Three Projects kiosks (one per project).
 
 robot-expressive.glb
   Source  : three.js examples — RobotExpressive
@@ -40,11 +55,15 @@ robot-expressive.glb
             palette. Kept for its clips; closely matches the Kenney toy
             aesthetic.
 
-Retired assets (removed this polish pass for art-direction consistency):
-  - DamagedHelmet (Khronos, CC BY-NC) — PBR photorealism clashed with
-    the low-poly family. Replaced by satelliteDish_detailed.
-  - Duck (Khronos, CC BY) — toy stylisation didn't belong. Replaced
-    by astronautA.
-  - Parrot (three.js) — orphaned style. Replaced by craft_speederA.
+Retired assets (prior polish passes):
+  - DamagedHelmet (Khronos, CC BY-NC) — PBR photorealism clashed.
+  - Duck (Khronos, CC BY) — toy stylisation didn't belong.
+  - Parrot (three.js) — orphaned style.
+
+Retired modules in this redesign:
+  - src/world/islands/*, Island.tsx, Plinth.tsx, Ground.tsx (old),
+    IslandDecor.tsx, ZoneStaging.tsx, SkillsExhibit.tsx,
+    projectPoster.ts — all deleted. Park-layout replaced the
+    "floating tables" metaphor entirely.
 
 Attribution surfaced in the site footer (`src/ui/Footer.tsx`).

@@ -5,31 +5,25 @@ import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { Mascot } from "@/mascot/Mascot";
 import { AdaptiveQuality } from "./AdaptiveQuality";
 import { CameraRig } from "./CameraRig";
-import { Ground } from "./Ground";
 import { HdriEnvironment } from "./HdriEnvironment";
 import { Hologram } from "./Hologram";
-import { Contact } from "./islands/Contact";
-import { Experience } from "./islands/Experience";
-import { Gallery } from "./islands/Gallery";
-import { Hub } from "./islands/Hub";
-import { Projects } from "./islands/Projects";
-import { Skills } from "./islands/Skills";
 import { Lighting } from "./Lighting";
 import { Particles } from "./Particles";
+import { Park } from "./park/Park";
 import { AmbientFlyers } from "./props/AmbientFlyers";
 import { ArrivalRipple } from "./props/ArrivalRipple";
 import { Sky } from "./Sky";
 import { ZoneSpotlight } from "./ZoneSpotlight";
 
 /**
- * Everything inside the R3F `<Canvas>`. Mounted once per session; theme
- * changes mutate uniforms and colors, they don't remount geometry.
+ * Scene root. Outdoor-exposition-park layout: one continuous ground,
+ * stone paths connecting six ground-level zones, everything built from
+ * Kenney CC0 GLBs. Theme changes mutate materials, not geometry.
  */
 export function WorldScene() {
   const { scene, gl } = useThree();
   const theme = useActiveTheme();
 
-  // Install the fog once; Sky.tsx lerps its color per frame.
   // biome-ignore lint/correctness/useExhaustiveDependencies: install once on mount; Sky.tsx handles color animation
   useEffect(() => {
     scene.fog = new THREE.Fog(theme.palette.fog, theme.fog.near, theme.fog.far);
@@ -40,7 +34,6 @@ export function WorldScene() {
     };
   }, []);
 
-  // Update fog near/far on theme change (color is lerped in Sky.tsx)
   useEffect(() => {
     if (scene.fog instanceof THREE.Fog) {
       scene.fog.near = theme.fog.near;
@@ -54,23 +47,17 @@ export function WorldScene() {
       <Sky />
       <HdriEnvironment />
       <Lighting />
-      <Ground />
       <Particles />
 
-      {/* Theatrical spotlights — one per zone, tuned to the zone's height. */}
-      <ZoneSpotlight zone="hub" offset={[0, 10, 3]} intensity={5} accent />
-      <ZoneSpotlight zone="experience" offset={[0, 10, 3]} intensity={4.5} />
-      <ZoneSpotlight zone="projects" offset={[0, 10, 3]} intensity={4.5} />
-      <ZoneSpotlight zone="skills" offset={[0, 10, 2]} intensity={4} />
-      <ZoneSpotlight zone="gallery" offset={[0, 9, 3]} intensity={4} />
-      <ZoneSpotlight zone="contact" offset={[0, 9, 3]} intensity={4.5} accent />
+      {/* Soft theatrical spotlights for each zone. */}
+      <ZoneSpotlight zone="hub" offset={[0, 10, 3]} intensity={4} accent />
+      <ZoneSpotlight zone="experience" offset={[0, 9, 2]} intensity={3.5} />
+      <ZoneSpotlight zone="projects" offset={[0, 9, 2]} intensity={3.5} />
+      <ZoneSpotlight zone="skills" offset={[0, 10, 0]} intensity={3.5} />
+      <ZoneSpotlight zone="gallery" offset={[0, 9, 2]} intensity={3} />
+      <ZoneSpotlight zone="contact" offset={[0, 9, 2]} intensity={3.5} accent />
 
-      <Hub />
-      <Experience />
-      <Projects />
-      <Skills />
-      <Gallery />
-      <Contact />
+      <Park />
 
       <Hologram />
       <Mascot />

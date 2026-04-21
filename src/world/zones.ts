@@ -1,15 +1,16 @@
 /**
- * Canonical world zones. Positions are in world-space units.
- * The camera rig and mascot orchestrator both read this map.
- * Adding / renaming a zone => update this file plus corresponding island.
+ * Canonical world zones — park layout (flat ground, no tables/islands).
+ * Positions are in world-space units. Camera rig + mascot orchestrator
+ * both read this map. Adding or renaming a zone → update this file plus
+ * the matching park/zones/*.tsx component.
  */
 export const ZONES = {
   hub: { position: [0, 0, 0], label: "Hub" },
-  experience: { position: [-8, 0, -4], label: "Experience" },
-  projects: { position: [8, 0, -4], label: "Projects" },
-  skills: { position: [0, 1.2, -10], label: "Skills" },
-  gallery: { position: [-8, -1, 6], label: "Gallery" },
-  contact: { position: [8, -1, 6], label: "Contact" },
+  gallery: { position: [-14, 0, -8], label: "Gallery" },
+  projects: { position: [14, 0, -8], label: "Projects" },
+  experience: { position: [-14, 0, 4], label: "Experience" },
+  contact: { position: [14, 0, 4], label: "Contact" },
+  skills: { position: [0, 0, 10], label: "Skills" },
 } as const satisfies Record<string, { position: readonly [number, number, number]; label: string }>;
 
 export type ZoneId = keyof typeof ZONES;

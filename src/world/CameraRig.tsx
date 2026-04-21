@@ -5,7 +5,19 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useStore } from "@/stores";
 import type { ZoneId } from "./zones";
 
-/** Camera "shots" per target. Positions are world-space. */
+/**
+ * Camera "shots" per target. Positions are world-space. Tuned for the
+ * ground-level park layout (no floating islands — the camera no longer
+ * needs to sit high above).
+ *
+ * Park zone anchors (see zones.ts):
+ *   hub        (0,  0,  0)
+ *   gallery   (-14, 0, -8)
+ *   projects  (+14, 0, -8)
+ *   experience(-14, 0,  4)
+ *   contact   (+14, 0,  4)
+ *   skills    (0,   0, 10)
+ */
 const SHOTS: Record<
   ZoneId | "overview" | "hub",
   {
@@ -13,13 +25,13 @@ const SHOTS: Record<
     target: [number, number, number];
   }
 > = {
-  overview: { pos: [0, 12, 22], target: [0, 0, -2] },
-  hub: { pos: [0, 4, 8], target: [0, 0.5, 0] },
-  experience: { pos: [-12, 4, 2], target: [-8, 0.5, -4] },
-  projects: { pos: [12, 4, 2], target: [8, 0.5, -4] },
-  skills: { pos: [0, 6, -4], target: [0, 1.5, -10] },
-  gallery: { pos: [-12, 3, 12], target: [-8, 0.5, 6] },
-  contact: { pos: [12, 3, 12], target: [8, 0.5, 6] },
+  overview: { pos: [0, 16, 26], target: [0, 1, 0] },
+  hub: { pos: [0, 3, 7], target: [0, 1.2, 0] },
+  gallery: { pos: [-14, 3.5, -1.5], target: [-14, 1, -8] },
+  projects: { pos: [14, 3.5, -1.5], target: [14, 1, -8] },
+  experience: { pos: [-14, 3.5, 11], target: [-14, 1.2, 4] },
+  contact: { pos: [14, 3.5, 11], target: [14, 1.2, 4] },
+  skills: { pos: [0, 4, 17], target: [0, 1.4, 10] },
 };
 
 const ZOOM_FACTORS = {
