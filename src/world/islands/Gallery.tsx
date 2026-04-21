@@ -1,14 +1,30 @@
 import { useActiveTheme } from "@/hooks/useActiveTheme";
+import type { ProjectId } from "@/types/tools";
 import { Island } from "../Island";
 import { IslandDecor } from "../props/IslandDecor";
+import { getPosterTexture } from "../props/projectPoster";
+import { GalleryWall } from "../props/ZoneStaging";
 import { ZONES } from "../zones";
 
-// Frame positions (x offset) + slight tilt variation so the wall feels hand-hung.
-const FRAMES: Array<{ x: number; y: number; tilt: number; ratio: "portrait" | "landscape" }> = [
-  { x: -1.55, y: 0.95, tilt: -0.04, ratio: "portrait" },
-  { x: -0.5, y: 1.1, tilt: 0.03, ratio: "landscape" },
-  { x: 0.55, y: 0.9, tilt: -0.02, ratio: "portrait" },
-  { x: 1.55, y: 1.05, tilt: 0.04, ratio: "landscape" },
+/**
+ * A gallery-style wall of project posters. Textures are generated via
+ * CanvasTexture so we don't need network assets; swap the poster spec in
+ * `src/world/props/projectPoster.ts` (or drop a real image there) when
+ * you have screenshots.
+ */
+type Frame = {
+  x: number;
+  y: number;
+  tilt: number;
+  project: ProjectId | null;
+  portrait: boolean;
+};
+
+const FRAMES: Frame[] = [
+  { x: -1.7, y: 1.15, tilt: -0.03, project: "vocabuddy", portrait: true },
+  { x: -0.5, y: 1.3, tilt: 0.02, project: "shotmock", portrait: false },
+  { x: 0.55, y: 1.1, tilt: -0.02, project: "claude-voice", portrait: true },
+  { x: 1.65, y: 1.25, tilt: 0.03, project: null, portrait: false },
 ];
 
 export function Gallery() {
@@ -16,34 +32,39 @@ export function Gallery() {
 
   return (
     <Island id="gallery" title="Gallery" position={ZONES.gallery.position} radius={2.9}>
-      <IslandDecor variant="plant" position={[-2.3, 0.25, 1.2]} scale={1.1} />
-      <IslandDecor variant="plant" position={[2.3, 0.25, 1.2]} scale={0.9} />
+      <GalleryWall />
+      <IslandDecor variant="plant" position={[-2.35, 0.25, 1.4]} scale={1.1} />
+      <IslandDecor variant="plant" position={[2.35, 0.25, 1.4]} scale={0.9} />
+
       {FRAMES.map((f) => {
-        const w = f.ratio === "portrait" ? 0.55 : 0.8;
-        const h = f.ratio === "portrait" ? 0.8 : 0.55;
+        const w = f.portrait ? 0.6 : 0.9;
+        const h = f.portrait ? 0.85 : 0.6;
+        const texture = f.project ? getPosterTexture(f.project) : null;
         return (
-          <group key={f.x} position={[f.x, f.y, -0.4]} rotation={[0, 0, f.tilt]}>
+          <group key={f.x} position={[f.x, f.y, -0.92]} rotation={[0, 0, f.tilt]}>
             {/* Thin frame */}
             <mesh castShadow>
               <boxGeometry args={[w + 0.06, h + 0.06, 0.03]} />
-              <meshStandardMaterial
-                color={theme.palette.plinth}
-                metalness={0.15}
-                roughness={0.55}
-              />
+              <meshStandardMaterial color={theme.palette.plinth} metalness={0.2} roughness={0.5} />
             </mesh>
-            {/* Matte + subtle accent, slightly proud of the frame */}
+
+            {/* Poster — either the canvas texture, or a matte placeholder */}
             <mesh position={[0, 0, 0.02]}>
               <planeGeometry args={[w, h]} />
-              <meshStandardMaterial color={theme.palette.island} roughness={0.95} metalness={0} />
+              {texture ? (
+                <meshStandardMaterial map={texture} roughness={0.85} metalness={0} />
+              ) : (
+                <meshStandardMaterial color={theme.palette.island} roughness={0.95} metalness={0} />
+              )}
             </mesh>
-            {/* Tiny accent strip at bottom — reads as a photo caption */}
+
+            {/* Caption strip */}
             <mesh position={[0, -h / 2 + 0.05, 0.021]}>
               <planeGeometry args={[w * 0.7, 0.03]} />
               <meshStandardMaterial
                 color={theme.palette.accent}
                 emissive={theme.palette.accent}
-                emissiveIntensity={theme.id === "cyber" ? 0.5 : 0.15}
+                emissiveIntensity={theme.id === "cyber" ? 0.8 : 0.2}
               />
             </mesh>
           </group>

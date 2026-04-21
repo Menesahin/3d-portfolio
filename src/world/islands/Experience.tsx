@@ -3,6 +3,7 @@ import type { CompanyId } from "@/types/tools";
 import { Island } from "../Island";
 import { Plinth } from "../Plinth";
 import { IslandDecor } from "../props/IslandDecor";
+import { ExperienceArches } from "../props/ZoneStaging";
 import { ZONES } from "../zones";
 
 const COMPANIES: ReadonlyArray<{
@@ -27,8 +28,9 @@ export function Experience() {
 
   return (
     <Island id="experience" title="Experience" position={ZONES.experience.position} radius={2.9}>
-      <IslandDecor variant="lantern" position={[-2.2, 0.25, 1.3]} scale={1.2} />
-      <IslandDecor variant="lantern" position={[2.2, 0.25, 1.3]} scale={1.2} />
+      <ExperienceArches />
+      <IslandDecor variant="lantern" position={[-2.3, 0.25, 1.5]} scale={1.2} />
+      <IslandDecor variant="lantern" position={[2.3, 0.25, 1.5]} scale={1.2} />
       {COMPANIES.map((c) => (
         <Plinth
           key={c.id}

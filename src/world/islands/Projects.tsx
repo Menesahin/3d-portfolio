@@ -27,8 +27,18 @@ export function Projects() {
 
   return (
     <Island id="projects" title="Projects" position={ZONES.projects.position} radius={2.9}>
-      <IslandDecor variant="monitor" position={[-2.3, 0.25, 1.35]} rotation={[0, 0.4, 0]} scale={1.1} />
-      <IslandDecor variant="monitor" position={[2.3, 0.25, 1.35]} rotation={[0, -0.4, 0]} scale={1.1} />
+      <IslandDecor
+        variant="monitor"
+        position={[-2.3, 0.25, 1.35]}
+        rotation={[0, 0.4, 0]}
+        scale={1.1}
+      />
+      <IslandDecor
+        variant="monitor"
+        position={[2.3, 0.25, 1.35]}
+        rotation={[0, -0.4, 0]}
+        scale={1.1}
+      />
       {PROJECT_LIST.map((p) => (
         <Plinth
           key={p.id}

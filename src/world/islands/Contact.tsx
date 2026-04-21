@@ -5,6 +5,7 @@ import { useHover } from "@/hooks/useHover";
 import { useStore } from "@/stores";
 import { Island } from "../Island";
 import { IslandDecor } from "../props/IslandDecor";
+import { ContactSignage } from "../props/ZoneStaging";
 import { ZONES } from "../zones";
 
 export function Contact() {
@@ -24,8 +25,9 @@ export function Contact() {
 
   return (
     <Island id="contact" title="Contact" position={ZONES.contact.position} radius={2.4}>
-      <IslandDecor variant="lantern" position={[-1.6, 0.25, 0.6]} scale={0.9} />
-      <IslandDecor variant="lantern" position={[1.6, 0.25, 0.6]} scale={0.9} />
+      <ContactSignage />
+      <IslandDecor variant="lantern" position={[-1.75, 0.25, 0.8]} scale={0.95} />
+      <IslandDecor variant="lantern" position={[1.75, 0.25, 0.8]} scale={0.95} />
       {/* Terminal: thin tower with a glowing screen — clickable. */}
       <group
         position={[0, 0.6, 0]}

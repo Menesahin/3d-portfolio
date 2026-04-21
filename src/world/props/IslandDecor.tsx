@@ -67,7 +67,6 @@ function Crystals({
     <group position={position} rotation={rotation} scale={scale}>
       <group ref={group}>
         {tri.map(([x, y, z, r], i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: static short list
           <mesh key={i} position={[x, y, z]} castShadow>
             <coneGeometry args={[r, r * 2.4, 5]} />
             <meshStandardMaterial
@@ -123,9 +122,8 @@ function Plant({
         [0, 0.5, 0, 1] as const,
         [0.12, 0.45, 0, 0.85] as const,
         [-0.1, 0.48, 0.05, 0.8] as const,
-      ].map(([x, y, z, s], i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: static short list
-        <mesh key={i} position={[x, y, z]} castShadow scale={s}>
+      ].map(([x, y, z, s]) => (
+        <mesh key={`${x}-${y}-${z}`} position={[x, y, z]} castShadow scale={s}>
           <icosahedronGeometry args={[0.16, 0]} />
           <meshStandardMaterial color={leaf} roughness={0.85} flatShading />
         </mesh>
@@ -155,7 +153,7 @@ function Lantern({
     }
   });
   const metal = theme.palette.plinth;
-  const glow = theme.id === "cyber" ? theme.palette.accent2 ?? theme.palette.accent : "#FFC878";
+  const glow = theme.id === "cyber" ? (theme.palette.accent2 ?? theme.palette.accent) : "#FFC878";
   return (
     <group position={position} rotation={rotation} scale={scale}>
       <mesh position={[0, 0.25, 0]} castShadow>
@@ -164,7 +162,12 @@ function Lantern({
       </mesh>
       <mesh position={[0, 0.55, 0]} castShadow>
         <cylinderGeometry args={[0.12, 0.16, 0.18, 8, 1, true]} />
-        <meshStandardMaterial color={metal} metalness={0.6} roughness={0.35} side={THREE.DoubleSide} />
+        <meshStandardMaterial
+          color={metal}
+          metalness={0.6}
+          roughness={0.35}
+          side={THREE.DoubleSide}
+        />
       </mesh>
       <mesh position={[0, 0.53, 0]}>
         <sphereGeometry args={[0.08, 12, 12]} />

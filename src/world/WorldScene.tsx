@@ -5,6 +5,7 @@ import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { Mascot } from "@/mascot/Mascot";
 import { CameraRig } from "./CameraRig";
 import { Ground } from "./Ground";
+import { HdriEnvironment } from "./HdriEnvironment";
 import { Hologram } from "./Hologram";
 import { Contact } from "./islands/Contact";
 import { Experience } from "./islands/Experience";
@@ -15,6 +16,7 @@ import { Skills } from "./islands/Skills";
 import { Lighting } from "./Lighting";
 import { Particles } from "./Particles";
 import { Sky } from "./Sky";
+import { ZoneSpotlight } from "./ZoneSpotlight";
 
 /**
  * Everything inside the R3F `<Canvas>`. Mounted once per session; theme
@@ -47,9 +49,18 @@ export function WorldScene() {
   return (
     <>
       <Sky />
+      <HdriEnvironment />
       <Lighting />
       <Ground />
       <Particles />
+
+      {/* Theatrical spotlights — one per zone, tuned to the zone's height. */}
+      <ZoneSpotlight zone="hub" offset={[0, 10, 3]} intensity={5} accent />
+      <ZoneSpotlight zone="experience" offset={[0, 10, 3]} intensity={4.5} />
+      <ZoneSpotlight zone="projects" offset={[0, 10, 3]} intensity={4.5} />
+      <ZoneSpotlight zone="skills" offset={[0, 10, 2]} intensity={4} />
+      <ZoneSpotlight zone="gallery" offset={[0, 9, 3]} intensity={4} />
+      <ZoneSpotlight zone="contact" offset={[0, 9, 3]} intensity={4.5} accent />
 
       <Hub />
       <Experience />
