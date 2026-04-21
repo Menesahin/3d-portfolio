@@ -12,9 +12,6 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "suspicious": {
-        "noExplicitAny": "warn"
-      },
       "style": {
         "noNonNullAssertion": "off"
       },
@@ -22,7 +19,12 @@
         "useUniqueElementIds": "off"
       },
       "a11y": {
-        "useSemanticElements": "off"
+        "useSemanticElements": "off",
+        "useValidAriaRole": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "noArrayIndexKey": "off"
       }
     }
   },

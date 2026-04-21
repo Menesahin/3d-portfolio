@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { streamChat, type ServerEvent } from "@/chat/stream";
 import type { ChatMessagePayload } from "@/chat/stream";
+import { type ServerEvent, streamChat } from "@/chat/stream";
 
 type LogEntry =
   | { t: number; kind: "out"; text: string }
@@ -29,8 +29,13 @@ export default function ChatLab() {
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll the event log to the bottom as new entries stream in.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll intent is tied to count, not identity
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [log.length]);
 
   const send = useCallback(
@@ -93,13 +98,16 @@ export default function ChatLab() {
   }, []);
 
   return (
-    <div className="min-h-screen w-screen bg-[var(--color-bg)] text-[var(--color-fg)] overflow-y-auto">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-4 px-4 py-6">
-        <header className="flex items-baseline justify-between">
+    // Viewport-locked shell. `min-h-0` on every flex/grid child is critical —
+    // without it, children can't shrink below their intrinsic size and the
+    // inner `overflow-y-auto` panes never scroll.
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[var(--color-bg)] text-[var(--color-fg)]">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-6 min-h-0">
+        <header className="flex shrink-0 items-baseline justify-between">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">chat-lab</h1>
             <p className="text-xs text-[var(--color-fg)]/60">
-              Phase-2 contract test. Raw SSE on the right, chat transcript on the left.
+              Phase-2 contract test. Transcript on the left, raw SSE on the right.
             </p>
           </div>
           <button
@@ -111,19 +119,17 @@ export default function ChatLab() {
           </button>
         </header>
 
-        <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Transcript */}
-          <section className="flex flex-col rounded-xl border border-[var(--color-fg)]/10 bg-[var(--color-bg)]/80 p-4">
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-fg)]/50">
+          <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[var(--color-fg)]/10 bg-[var(--color-bg)]/80">
+            <h2 className="shrink-0 border-b border-[var(--color-fg)]/5 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[var(--color-fg)]/50">
               transcript
             </h2>
-            <div className="flex-1 space-y-3 overflow-y-auto text-sm">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm">
               {messages.map((m, i) => (
                 <Bubble key={i} role={m.role} content={m.content} />
               ))}
-              {streaming && assistant && (
-                <Bubble role="assistant" content={`${assistant}▍`} />
-              )}
+              {streaming && assistant && <Bubble role="assistant" content={`${assistant}▍`} />}
               {messages.length === 0 && !streaming && (
                 <p className="text-[var(--color-fg)]/40">
                   Try a prompt below — or use a suggestion.
@@ -131,76 +137,75 @@ export default function ChatLab() {
               )}
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-1">
-              {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => void send(s)}
+            <div className="shrink-0 border-t border-[var(--color-fg)]/5 px-4 py-3">
+              <div className="mb-2 flex flex-wrap gap-1">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => void send(s)}
+                    disabled={streaming}
+                    className="rounded-full border border-[var(--color-fg)]/15 px-3 py-1 text-[11px] text-[var(--color-fg)]/70 hover:bg-[var(--color-fg)]/10 disabled:opacity-50"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void send(draft);
+                }}
+                className="flex items-center gap-2"
+              >
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  placeholder="Ask the mascot…"
                   disabled={streaming}
-                  className="rounded-full border border-[var(--color-fg)]/15 px-3 py-1 text-[11px] text-[var(--color-fg)]/70 hover:bg-[var(--color-fg)]/10 disabled:opacity-50"
-                >
-                  {s}
-                </button>
-              ))}
+                  className="flex-1 rounded-full border border-[var(--color-fg)]/15 bg-[var(--color-bg)]/80 px-4 py-2 text-sm outline-none"
+                />
+                {streaming ? (
+                  <button
+                    type="button"
+                    onClick={abort}
+                    className="rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white"
+                  >
+                    stop
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!draft.trim()}
+                    className="rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  >
+                    send
+                  </button>
+                )}
+              </form>
             </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void send(draft);
-              }}
-              className="mt-3 flex items-center gap-2"
-            >
-              <input
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="Ask the mascot…"
-                disabled={streaming}
-                className="flex-1 rounded-full border border-[var(--color-fg)]/15 bg-[var(--color-bg)]/80 px-4 py-2 text-sm outline-none"
-              />
-              {streaming ? (
-                <button
-                  type="button"
-                  onClick={abort}
-                  className="rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white"
-                >
-                  stop
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={!draft.trim()}
-                  className="rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                >
-                  send
-                </button>
-              )}
-            </form>
           </section>
 
           {/* Event log */}
-          <section className="flex flex-col rounded-xl border border-[var(--color-fg)]/10 bg-[var(--color-bg)]/80 p-4">
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-fg)]/50">
+          <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[var(--color-fg)]/10 bg-[var(--color-bg)]/80">
+            <h2 className="shrink-0 border-b border-[var(--color-fg)]/5 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[var(--color-fg)]/50">
               sse event log
             </h2>
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto font-mono text-[11px] leading-relaxed"
+              className="min-h-0 flex-1 overflow-y-auto px-4 py-3 font-mono text-[11px] leading-relaxed"
             >
               {log.map((entry, i) => (
                 <LogRow key={i} entry={entry} />
               ))}
               {log.length === 0 && (
-                <p className="text-[var(--color-fg)]/40">
-                  (no events yet — send a message)
-                </p>
+                <p className="text-[var(--color-fg)]/40">(no events yet — send a message)</p>
               )}
             </div>
           </section>
         </div>
 
-        <footer className="text-[10px] text-[var(--color-fg)]/40">
+        <footer className="shrink-0 text-[10px] text-[var(--color-fg)]/40">
           Backend: {import.meta.env.VITE_API_URL ?? "http://localhost:8000"}
         </footer>
       </div>

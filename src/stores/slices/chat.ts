@@ -13,6 +13,12 @@ export type ChatSlice = {
     isOpen: boolean;
     isStreaming: boolean;
     abortController: AbortController | null;
+    /**
+     * LangGraph thread id for this session. Stable across turns so the
+     * backend checkpointer can keep tool-call history visible to the LLM;
+     * regenerated on `clearChat` so a new conversation gets fresh state.
+     */
+    threadId: string;
   };
   toggleChat: () => void;
   openChat: () => void;
@@ -24,12 +30,19 @@ export type ChatSlice = {
   clearChat: () => void;
 };
 
+function newThreadId(): string {
+  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `thread-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export const createChatSlice: StateCreator<ChatSlice, [], [], ChatSlice> = (set, get) => ({
   chat: {
     messages: [],
     isOpen: false, // default collapsed — dock is a pill until clicked
     isStreaming: false,
     abortController: null,
+    threadId: newThreadId(),
   },
   toggleChat: () => set((prev) => ({ chat: { ...prev.chat, isOpen: !prev.chat.isOpen } })),
   openChat: () => set((prev) => ({ chat: { ...prev.chat, isOpen: true } })),
@@ -87,6 +100,7 @@ export const createChatSlice: StateCreator<ChatSlice, [], [], ChatSlice> = (set,
         messages: [],
         isStreaming: false,
         abortController: null,
+        threadId: newThreadId(),
       },
     }));
   },

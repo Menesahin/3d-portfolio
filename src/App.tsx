@@ -3,7 +3,9 @@ import { useDebugMode } from "@/hooks/useDebugMode";
 import { useT } from "@/hooks/useT";
 import { useStore } from "@/stores";
 import { ChatDock } from "@/ui/ChatDock";
+import { ContentPanel } from "@/ui/ContentPanel";
 import { DebugPanel } from "@/ui/DebugPanel";
+import { EventTicker } from "@/ui/EventTicker";
 import { Footer } from "@/ui/Footer";
 import { LangSelector } from "@/ui/LangSelector";
 import { SplashScreen } from "@/ui/SplashScreen";
@@ -63,8 +65,12 @@ function Portfolio() {
       {/* Chat dock */}
       <ChatDock />
 
-      {/* Debug panel (only when ?debug=1) */}
+      {/* Side content panel (driven by content.* tool events) */}
+      <ContentPanel />
+
+      {/* Debug panel + live UI-event ticker (only when ?debug=1) */}
       {debug && <DebugPanel />}
+      {debug && <EventTicker />}
 
       <Footer />
     </div>
