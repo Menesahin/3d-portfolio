@@ -20,5 +20,12 @@ parrot.glb
   License : Royalty-free / MIT (three.js repo)
   Notes   : Used as an ambient flying creature drifting above the scene.
 
+kenney/ (multiple GLBs — tree_oak, tree_fat, plant_bush*, flower_*,
+        mushroom_*, campfire_stones, rock_largeA, log_stack)
+  Source  : Kenney "Nature Kit" — https://kenney.nl/assets/nature-kit
+  License : CC0 1.0 Universal (public domain dedication, no attribution required)
+  Notes   : Scattered across the Hub, Gallery, Experience and Contact
+            islands for organic detail. Attribution optional but appreciated.
+
 Attribution is surfaced in the site footer (`src/ui/Footer.tsx`) and the
 site credits page if one is ever added.

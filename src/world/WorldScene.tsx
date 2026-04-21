@@ -13,9 +13,11 @@ import { Gallery } from "./islands/Gallery";
 import { Hub } from "./islands/Hub";
 import { Projects } from "./islands/Projects";
 import { Skills } from "./islands/Skills";
+import { AdaptiveQuality } from "./AdaptiveQuality";
 import { Lighting } from "./Lighting";
 import { Particles } from "./Particles";
 import { AmbientFlyers } from "./props/AmbientFlyers";
+import { ArrivalRipple } from "./props/ArrivalRipple";
 import { Sky } from "./Sky";
 import { ZoneSpotlight } from "./ZoneSpotlight";
 
@@ -73,7 +75,9 @@ export function WorldScene() {
       <Hologram />
       <Mascot />
       <AmbientFlyers />
+      <ArrivalRipple />
 
+      <AdaptiveQuality />
       <CameraRig />
     </>
   );

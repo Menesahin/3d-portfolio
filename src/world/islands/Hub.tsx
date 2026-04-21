@@ -22,6 +22,10 @@ export function Hub() {
         scale={0.006}
         rotation={[0, -0.6, 0]}
       />
+      {/* Small Kenney CC0 flora for warmth. */}
+      <GlbProp url="/models/props/kenney/mushroom_red.glb" position={[-1.4, 0.25, 1.5]} scale={0.65} />
+      <GlbProp url="/models/props/kenney/flower_redA.glb" position={[-0.6, 0.25, 2.1]} scale={0.7} />
+      <GlbProp url="/models/props/kenney/flower_yellowA.glb" position={[0.5, 0.25, 2.05]} scale={0.7} />
       {/* Name + role raised above the mascot head. */}
       <Text
         position={[0, 3.2, 0]}

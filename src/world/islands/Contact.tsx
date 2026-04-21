@@ -4,6 +4,7 @@ import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { useHover } from "@/hooks/useHover";
 import { useStore } from "@/stores";
 import { Island } from "../Island";
+import { GlbProp } from "../props/GlbProp";
 import { IslandDecor } from "../props/IslandDecor";
 import { ContactSignage } from "../props/ZoneStaging";
 import { ZONES } from "../zones";
@@ -28,6 +29,22 @@ export function Contact() {
       <ContactSignage />
       <IslandDecor variant="lantern" position={[-1.75, 0.25, 0.8]} scale={0.95} />
       <IslandDecor variant="lantern" position={[1.75, 0.25, 0.8]} scale={0.95} />
+      {/* Cozy campfire + stacked logs + anchor rock. */}
+      <GlbProp
+        url="/models/props/kenney/campfire_stones.glb"
+        position={[0, 0.25, -1.3]}
+        scale={0.7}
+      />
+      <GlbProp
+        url="/models/props/kenney/log_stack.glb"
+        position={[-1.5, 0.25, -0.8]}
+        scale={0.6}
+      />
+      <GlbProp
+        url="/models/props/kenney/rock_largeA.glb"
+        position={[1.5, 0.25, -0.8]}
+        scale={0.5}
+      />
       {/* Terminal: thin tower with a glowing screen — clickable. */}
       <group
         position={[0, 0.6, 0]}

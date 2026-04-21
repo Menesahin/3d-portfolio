@@ -67,3 +67,17 @@ export function GlbProp({
 useGLTF.preload("/models/props/damaged-helmet.glb");
 useGLTF.preload("/models/props/duck.glb");
 useGLTF.preload("/models/props/parrot.glb");
+
+// Kenney Nature Kit props (CC0)
+useGLTF.preload("/models/props/kenney/tree_oak.glb");
+useGLTF.preload("/models/props/kenney/tree_fat.glb");
+useGLTF.preload("/models/props/kenney/plant_bushDetailed.glb");
+useGLTF.preload("/models/props/kenney/plant_bushLarge.glb");
+useGLTF.preload("/models/props/kenney/flower_yellowA.glb");
+useGLTF.preload("/models/props/kenney/flower_purpleA.glb");
+useGLTF.preload("/models/props/kenney/flower_redA.glb");
+useGLTF.preload("/models/props/kenney/mushroom_red.glb");
+useGLTF.preload("/models/props/kenney/mushroom_tanGroup.glb");
+useGLTF.preload("/models/props/kenney/campfire_stones.glb");
+useGLTF.preload("/models/props/kenney/rock_largeA.glb");
+useGLTF.preload("/models/props/kenney/log_stack.glb");

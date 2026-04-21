@@ -1,7 +1,7 @@
 import { useActiveTheme } from "@/hooks/useActiveTheme";
 import type { ProjectId } from "@/types/tools";
 import { Island } from "../Island";
-import { IslandDecor } from "../props/IslandDecor";
+import { GlbProp } from "../props/GlbProp";
 import { getPosterTexture } from "../props/projectPoster";
 import { GalleryWall } from "../props/ZoneStaging";
 import { ZONES } from "../zones";
@@ -33,8 +33,32 @@ export function Gallery() {
   return (
     <Island id="gallery" title="Gallery" position={ZONES.gallery.position} radius={2.9}>
       <GalleryWall />
-      <IslandDecor variant="plant" position={[-2.35, 0.25, 1.4]} scale={1.1} />
-      <IslandDecor variant="plant" position={[2.35, 0.25, 1.4]} scale={0.9} />
+      {/* Real Kenney CC0 foliage — replaces the older procedural plants. */}
+      <GlbProp
+        url="/models/props/kenney/tree_oak.glb"
+        position={[-2.4, 0.25, 1.5]}
+        scale={0.6}
+      />
+      <GlbProp
+        url="/models/props/kenney/plant_bushDetailed.glb"
+        position={[-2.4, 0.25, 0.6]}
+        scale={0.55}
+      />
+      <GlbProp
+        url="/models/props/kenney/tree_fat.glb"
+        position={[2.4, 0.25, 1.5]}
+        scale={0.55}
+      />
+      <GlbProp
+        url="/models/props/kenney/flower_yellowA.glb"
+        position={[2.1, 0.25, 0.8]}
+        scale={0.8}
+      />
+      <GlbProp
+        url="/models/props/kenney/flower_purpleA.glb"
+        position={[-2.05, 0.25, -0.25]}
+        scale={0.7}
+      />
 
       {FRAMES.map((f) => {
         const w = f.portrait ? 0.6 : 0.9;
