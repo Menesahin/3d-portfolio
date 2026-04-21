@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* -------------------------------------------------------------------------- */
+/*  Design tokens                                                              */
+/*  Dreamy theme (default, editorial) + Cyber theme (dark, neon).              */
+/*  R3F materials read these via getComputedStyle(documentElement).            */
+/* -------------------------------------------------------------------------- */
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Dreamy (default) */
+  --color-bg: oklch(0.97 0.02 80);           /* warm cream */
+  --color-fg: oklch(0.18 0.02 260);          /* deep navy ink */
+  --color-muted: oklch(0.60 0.02 260);
+  --color-accent: oklch(0.70 0.18 20);       /* coral */
+  --color-island: oklch(0.94 0.02 80);
+  --color-plinth: oklch(0.88 0.02 60);
+  --color-sky-start: oklch(0.95 0.03 70);    /* peach */
+  --color-sky-end: oklch(0.88 0.08 300);     /* lavender */
+  --color-fog: oklch(0.95 0.02 70);
+}
+
+/* Cyber theme activates when <html class="dark"> */
+.dark {
+  --color-bg: oklch(0.09 0.02 260);
+  --color-fg: oklch(0.96 0.01 200);
+  --color-muted: oklch(0.55 0.03 260);
+  --color-accent: oklch(0.80 0.25 200);      /* cyan */
+  --color-accent-2: oklch(0.72 0.28 330);    /* magenta */
+  --color-island: oklch(0.15 0.03 260);
+  --color-plinth: oklch(0.22 0.05 220);
+  --color-sky-start: oklch(0.05 0.02 260);
+  --color-sky-end: oklch(0.10 0.03 260);
+  --color-fog: oklch(0.05 0.02 260);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Base                                                                       */
+/* -------------------------------------------------------------------------- */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden; /* single-scene SPA, no page scroll */
+}
+
+/* Always let the canvas fill the viewport under the 2D chrome */
+canvas {
+  display: block;
+}
+
+/* Reduce motion: respected inside the R3F layer too (see usePrefersReducedMotion) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
