@@ -34,21 +34,13 @@ export function Gallery() {
     <Island id="gallery" title="Gallery" position={ZONES.gallery.position} radius={2.9}>
       <GalleryWall />
       {/* Real Kenney CC0 foliage — replaces the older procedural plants. */}
-      <GlbProp
-        url="/models/props/kenney/tree_oak.glb"
-        position={[-2.4, 0.25, 1.5]}
-        scale={0.6}
-      />
+      <GlbProp url="/models/props/kenney/tree_oak.glb" position={[-2.4, 0.25, 1.5]} scale={0.6} />
       <GlbProp
         url="/models/props/kenney/plant_bushDetailed.glb"
         position={[-2.4, 0.25, 0.6]}
         scale={0.55}
       />
-      <GlbProp
-        url="/models/props/kenney/tree_fat.glb"
-        position={[2.4, 0.25, 1.5]}
-        scale={0.55}
-      />
+      <GlbProp url="/models/props/kenney/tree_fat.glb" position={[2.4, 0.25, 1.5]} scale={0.55} />
       <GlbProp
         url="/models/props/kenney/flower_yellowA.glb"
         position={[2.1, 0.25, 0.8]}

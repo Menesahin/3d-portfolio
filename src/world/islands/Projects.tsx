@@ -2,7 +2,8 @@ import { useStore } from "@/stores";
 import type { ProjectId } from "@/types/tools";
 import { Island } from "../Island";
 import { Plinth } from "../Plinth";
-import { IslandDecor } from "../props/IslandDecor";
+import { GlbProp } from "../props/GlbProp";
+import { ProjectsBackdrop } from "../props/ZoneStaging";
 import { ZONES } from "../zones";
 
 const PROJECT_LIST: ReadonlyArray<{
@@ -27,17 +28,21 @@ export function Projects() {
 
   return (
     <Island id="projects" title="Projects" position={ZONES.projects.position} radius={2.9}>
-      <IslandDecor
-        variant="monitor"
-        position={[-2.3, 0.25, 1.35]}
-        rotation={[0, 0.4, 0]}
-        scale={1.1}
+      <ProjectsBackdrop />
+      {/* Real Kenney Mini-Arcade props — a pinball and an arcade machine
+          flanking the three plinths. Matches the low-poly flat-shaded
+          vocabulary of the rest of the scene. */}
+      <GlbProp
+        url="/models/props/kenney/pinball.glb"
+        position={[-2.4, 0.25, 1.3]}
+        scale={0.75}
+        rotation={[0, 0.5, 0]}
       />
-      <IslandDecor
-        variant="monitor"
-        position={[2.3, 0.25, 1.35]}
-        rotation={[0, -0.4, 0]}
-        scale={1.1}
+      <GlbProp
+        url="/models/props/kenney/arcade-machine.glb"
+        position={[2.4, 0.25, 1.3]}
+        scale={0.8}
+        rotation={[0, -0.5, 0]}
       />
       {PROJECT_LIST.map((p) => (
         <Plinth

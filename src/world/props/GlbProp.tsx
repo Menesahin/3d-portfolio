@@ -62,22 +62,33 @@ export function GlbProp({
   );
 }
 
-// Preload the real GLBs used by islands. These start fetching during JS eval
-// so the scene doesn't pop-in when the camera first flies to the zone.
-useGLTF.preload("/models/props/damaged-helmet.glb");
-useGLTF.preload("/models/props/duck.glb");
-useGLTF.preload("/models/props/parrot.glb");
+// Preload every GLB used in the scene. Runs at JS eval so the fetches are
+// already in flight by the time the camera first dollies to a zone.
+// All props below share the Kenney flat-shaded low-poly art family (CC0).
+const KENNEY_URLS = [
+  // Nature Kit
+  "tree_oak",
+  "tree_fat",
+  "plant_bushDetailed",
+  "plant_bushLarge",
+  "flower_yellowA",
+  "flower_purpleA",
+  "flower_redA",
+  "mushroom_red",
+  "mushroom_tanGroup",
+  "campfire_stones",
+  "rock_largeA",
+  "log_stack",
+  // Space Kit
+  "satelliteDish_detailed",
+  "astronautA",
+  "craft_speederA",
+  "meteor_detailed",
+  // Mini-Arcade
+  "arcade-machine",
+  "pinball",
+] as const;
 
-// Kenney Nature Kit props (CC0)
-useGLTF.preload("/models/props/kenney/tree_oak.glb");
-useGLTF.preload("/models/props/kenney/tree_fat.glb");
-useGLTF.preload("/models/props/kenney/plant_bushDetailed.glb");
-useGLTF.preload("/models/props/kenney/plant_bushLarge.glb");
-useGLTF.preload("/models/props/kenney/flower_yellowA.glb");
-useGLTF.preload("/models/props/kenney/flower_purpleA.glb");
-useGLTF.preload("/models/props/kenney/flower_redA.glb");
-useGLTF.preload("/models/props/kenney/mushroom_red.glb");
-useGLTF.preload("/models/props/kenney/mushroom_tanGroup.glb");
-useGLTF.preload("/models/props/kenney/campfire_stones.glb");
-useGLTF.preload("/models/props/kenney/rock_largeA.glb");
-useGLTF.preload("/models/props/kenney/log_stack.glb");
+for (const slug of KENNEY_URLS) {
+  useGLTF.preload(`/models/props/kenney/${slug}.glb`);
+}

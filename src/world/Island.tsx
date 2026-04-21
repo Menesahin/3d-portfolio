@@ -95,9 +95,11 @@ export function Island({ id, position, radius = 2.2, title, children }: IslandPr
         <meshStandardMaterial
           ref={topMat}
           color={theme.palette.island}
-          roughness={0.7}
+          roughness={0.85}
+          metalness={0}
           emissive={theme.palette.accent}
           emissiveIntensity={0}
+          flatShading
         />
       </mesh>
 

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { useStore } from "@/stores";
-import { type ZoneId, ZONES } from "@/world/zones";
+import { ZONES, type ZoneId } from "@/world/zones";
 
 /**
  * Small shader-driven ripple that plays whenever the mascot arrives at
@@ -84,11 +84,7 @@ function RippleMesh({
 
   const [zx, zy, zz] = ZONES[ripple.zone].position;
   return (
-    <mesh
-      ref={mesh}
-      position={[zx, zy + 0.45, zz]}
-      rotation={[-Math.PI / 2, 0, 0]}
-    >
+    <mesh ref={mesh} position={[zx, zy + 0.45, zz]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.4, 0.5, 48]} />
       <meshBasicMaterial
         ref={mat}

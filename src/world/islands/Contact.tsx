@@ -35,11 +35,7 @@ export function Contact() {
         position={[0, 0.25, -1.3]}
         scale={0.7}
       />
-      <GlbProp
-        url="/models/props/kenney/log_stack.glb"
-        position={[-1.5, 0.25, -0.8]}
-        scale={0.6}
-      />
+      <GlbProp url="/models/props/kenney/log_stack.glb" position={[-1.5, 0.25, -0.8]} scale={0.6} />
       <GlbProp
         url="/models/props/kenney/rock_largeA.glb"
         position={[1.5, 0.25, -0.8]}

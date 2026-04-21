@@ -73,8 +73,8 @@ function Crystals({
               color={accent}
               emissive={accent}
               emissiveIntensity={theme.id === "cyber" ? 0.9 : 0.25}
-              roughness={0.25}
-              metalness={0.45}
+              roughness={0.65}
+              metalness={0}
               flatShading
             />
           </mesh>
@@ -110,12 +110,12 @@ function Plant({
       {/* Pot */}
       <mesh position={[0, 0.1, 0]} castShadow>
         <cylinderGeometry args={[0.18, 0.14, 0.2, 10]} />
-        <meshStandardMaterial color={pot} roughness={0.8} />
+        <meshStandardMaterial color={pot} roughness={0.9} metalness={0} flatShading />
       </mesh>
       {/* Stem */}
       <mesh position={[0, 0.35, 0]}>
         <cylinderGeometry args={[0.02, 0.02, 0.3, 6]} />
-        <meshStandardMaterial color="#6b8f58" roughness={0.7} />
+        <meshStandardMaterial color="#6b8f58" roughness={0.9} metalness={0} flatShading />
       </mesh>
       {/* Leaves */}
       {[
@@ -158,15 +158,16 @@ function Lantern({
     <group position={position} rotation={rotation} scale={scale}>
       <mesh position={[0, 0.25, 0]} castShadow>
         <cylinderGeometry args={[0.03, 0.04, 0.5, 8]} />
-        <meshStandardMaterial color={metal} metalness={0.5} roughness={0.35} />
+        <meshStandardMaterial color={metal} metalness={0} roughness={0.8} flatShading />
       </mesh>
       <mesh position={[0, 0.55, 0]} castShadow>
         <cylinderGeometry args={[0.12, 0.16, 0.18, 8, 1, true]} />
         <meshStandardMaterial
           color={metal}
-          metalness={0.6}
-          roughness={0.35}
+          metalness={0}
+          roughness={0.8}
           side={THREE.DoubleSide}
+          flatShading
         />
       </mesh>
       <mesh position={[0, 0.53, 0]}>
@@ -176,7 +177,8 @@ function Lantern({
           color={glow}
           emissive={glow}
           emissiveIntensity={1}
-          roughness={0.2}
+          roughness={0.4}
+          metalness={0}
         />
       </mesh>
     </group>
@@ -210,17 +212,27 @@ function Monitor({
       {/* Stand */}
       <mesh position={[0, 0.06, 0]} castShadow>
         <cylinderGeometry args={[0.12, 0.14, 0.12, 16]} />
-        <meshStandardMaterial color={theme.palette.plinth} roughness={0.6} />
+        <meshStandardMaterial
+          color={theme.palette.plinth}
+          roughness={0.85}
+          metalness={0}
+          flatShading
+        />
       </mesh>
       {/* Neck */}
       <mesh position={[0, 0.22, 0]}>
         <cylinderGeometry args={[0.03, 0.03, 0.2, 8]} />
-        <meshStandardMaterial color="#8A8D96" metalness={0.6} roughness={0.4} />
+        <meshStandardMaterial color="#8A8D96" metalness={0} roughness={0.85} flatShading />
       </mesh>
       {/* Screen frame */}
       <mesh position={[0, 0.42, 0]} castShadow>
         <boxGeometry args={[0.56, 0.34, 0.06]} />
-        <meshStandardMaterial color={theme.palette.plinth} roughness={0.5} />
+        <meshStandardMaterial
+          color={theme.palette.plinth}
+          roughness={0.85}
+          metalness={0}
+          flatShading
+        />
       </mesh>
       {/* Screen */}
       <mesh position={[0, 0.42, 0.032]}>

@@ -65,10 +65,11 @@ export function Plinth({
         <meshStandardMaterial
           ref={mat}
           color={theme.palette.plinth}
-          roughness={0.6}
-          metalness={theme.id === "cyber" ? 0.4 : 0.05}
+          roughness={0.85}
+          metalness={0}
           emissive={theme.palette.accent}
           emissiveIntensity={0}
+          flatShading
         />
       </mesh>
 

@@ -4,9 +4,10 @@ import type * as THREE from "three";
 import { GlbProp } from "./GlbProp";
 
 /**
- * Distant ambient wildlife — a Parrot looping high above the scene. Reads
- * as "world feels inhabited" without demanding attention. A single mesh is
- * moved along a stretched ellipse on the XZ plane with a gentle Y-bob.
+ * Distant ambient traffic — a small Kenney Space Kit speeder traces a
+ * wide ellipse high above the islands. Banks toward its direction of
+ * travel so the silhouette reads clearly from any camera angle. Same
+ * flat-shaded vocabulary as every other prop in the scene.
  */
 export function AmbientFlyers() {
   const pivot = useRef<THREE.Group>(null);
@@ -19,12 +20,11 @@ export function AmbientFlyers() {
       orbit.y + Math.sin(t * 1.3) * 1.4,
       Math.sin(t) * orbit.rz,
     );
-    // Bank the body toward the direction of travel.
     pivot.current.rotation.y = -t + Math.PI / 2;
   });
   return (
     <group ref={pivot}>
-      <GlbProp url="/models/props/parrot.glb" scale={0.08} play />
+      <GlbProp url="/models/props/kenney/craft_speederA.glb" scale={0.55} rotation={[0, 0, 0]} />
     </group>
   );
 }

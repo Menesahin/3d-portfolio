@@ -33,8 +33,17 @@ export function Experience() {
       <IslandDecor variant="lantern" position={[-2.3, 0.25, 1.5]} scale={1.2} />
       <IslandDecor variant="lantern" position={[2.3, 0.25, 1.5]} scale={1.2} />
       {/* Anchoring weight — a real stone at the back corners. */}
-      <GlbProp url="/models/props/kenney/rock_largeA.glb" position={[-2.4, 0.25, -1.0]} scale={0.7} />
-      <GlbProp url="/models/props/kenney/rock_largeA.glb" position={[2.4, 0.25, -1.0]} scale={0.7} rotation={[0, 1.2, 0]} />
+      <GlbProp
+        url="/models/props/kenney/rock_largeA.glb"
+        position={[-2.4, 0.25, -1.0]}
+        scale={0.7}
+      />
+      <GlbProp
+        url="/models/props/kenney/rock_largeA.glb"
+        position={[2.4, 0.25, -1.0]}
+        scale={0.7}
+        rotation={[0, 1.2, 0]}
+      />
       {COMPANIES.map((c) => (
         <Plinth
           key={c.id}

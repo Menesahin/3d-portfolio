@@ -15,17 +15,29 @@ export function Hub() {
       <HubArch />
       <IslandDecor variant="crystals" position={[1.9, 0.25, 0.9]} scale={1.1} />
       <IslandDecor variant="crystals" position={[-1.95, 0.25, -0.6]} scale={0.85} />
-      {/* Rubber duck — dev-culture easter egg next to the mascot. */}
+      {/* Space-explorer companion — Kenney astronaut standing beside the mascot. */}
       <GlbProp
-        url="/models/props/duck.glb"
-        position={[1.2, 0.3, 1.1]}
-        scale={0.006}
-        rotation={[0, -0.6, 0]}
+        url="/models/props/kenney/astronautA.glb"
+        position={[1.4, 0.25, 1.2]}
+        scale={0.55}
+        rotation={[0, -0.8, 0]}
       />
       {/* Small Kenney CC0 flora for warmth. */}
-      <GlbProp url="/models/props/kenney/mushroom_red.glb" position={[-1.4, 0.25, 1.5]} scale={0.65} />
-      <GlbProp url="/models/props/kenney/flower_redA.glb" position={[-0.6, 0.25, 2.1]} scale={0.7} />
-      <GlbProp url="/models/props/kenney/flower_yellowA.glb" position={[0.5, 0.25, 2.05]} scale={0.7} />
+      <GlbProp
+        url="/models/props/kenney/mushroom_red.glb"
+        position={[-1.4, 0.25, 1.5]}
+        scale={0.65}
+      />
+      <GlbProp
+        url="/models/props/kenney/flower_redA.glb"
+        position={[-0.6, 0.25, 2.1]}
+        scale={0.7}
+      />
+      <GlbProp
+        url="/models/props/kenney/flower_yellowA.glb"
+        position={[0.5, 0.25, 2.05]}
+        scale={0.7}
+      />
       {/* Name + role raised above the mascot head. */}
       <Text
         position={[0, 3.2, 0]}

@@ -33,7 +33,7 @@ export function HubArch() {
       {[-1.9, 1.9].map((x) => (
         <mesh key={x} position={[x, 1.4, 0]} castShadow>
           <cylinderGeometry args={[0.12, 0.16, 2.6, 16]} />
-          <meshStandardMaterial color={stone} roughness={0.6} metalness={0.1} />
+          <meshStandardMaterial color={stone} roughness={0.85} metalness={0} flatShading />
         </mesh>
       ))}
       {/* Top beam with subtle emissive */}
@@ -44,8 +44,9 @@ export function HubArch() {
           color={stone}
           emissive={accent}
           emissiveIntensity={0.5}
-          roughness={0.45}
-          metalness={0.35}
+          roughness={0.85}
+          metalness={0}
+          flatShading
         />
       </mesh>
       {/* Inlaid accent strip */}
@@ -72,17 +73,17 @@ export function ExperienceArches() {
           {/* Left column */}
           <mesh position={[-0.55, 1.0, 0]} castShadow>
             <boxGeometry args={[0.12, 2.0, 0.12]} />
-            <meshStandardMaterial color={stone} roughness={0.55} metalness={0.2} />
+            <meshStandardMaterial color={stone} roughness={0.85} metalness={0} flatShading />
           </mesh>
           {/* Right column */}
           <mesh position={[0.55, 1.0, 0]} castShadow>
             <boxGeometry args={[0.12, 2.0, 0.12]} />
-            <meshStandardMaterial color={stone} roughness={0.55} metalness={0.2} />
+            <meshStandardMaterial color={stone} roughness={0.85} metalness={0} flatShading />
           </mesh>
           {/* Top */}
           <mesh position={[0, 2.05, 0]} castShadow>
             <boxGeometry args={[1.3, 0.12, 0.12]} />
-            <meshStandardMaterial color={stone} roughness={0.55} metalness={0.2} />
+            <meshStandardMaterial color={stone} roughness={0.85} metalness={0} flatShading />
           </mesh>
           {/* Glow strip under top */}
           <mesh position={[0, 1.97, 0.07]}>
@@ -133,9 +134,10 @@ export function ProjectsBackdrop() {
         <torusGeometry args={[3.2, 1.3, 2, 24, Math.PI * 0.85]} />
         <meshStandardMaterial
           color={theme.palette.plinth}
-          roughness={0.6}
-          metalness={0.3}
+          roughness={0.85}
+          metalness={0}
           side={THREE.DoubleSide}
+          flatShading
         />
       </mesh>
       {/* Emissive inner ribbon on the backdrop */}
@@ -188,6 +190,8 @@ export function SkillsCanopy() {
           color={theme.palette.accent}
           emissive={theme.palette.accent}
           emissiveIntensity={theme.id === "cyber" ? 1.8 : 0.45}
+          roughness={0.6}
+          metalness={0}
         />
       </mesh>
     </group>
@@ -203,7 +207,12 @@ export function GalleryWall() {
     <group position={[0, 0, -1.05]}>
       <mesh position={[0, 1.4, 0]}>
         <planeGeometry args={[5.4, 2.6]} />
-        <meshStandardMaterial color={theme.palette.island} roughness={0.95} metalness={0} />
+        <meshStandardMaterial
+          color={theme.palette.island}
+          roughness={0.95}
+          metalness={0}
+          flatShading
+        />
       </mesh>
       {/* Floor strip / cornice */}
       <mesh position={[0, 0.25, 0.02]}>
@@ -237,8 +246,9 @@ export function ContactSignage() {
           color={theme.palette.plinth}
           emissive={theme.palette.accent}
           emissiveIntensity={1}
-          roughness={0.35}
-          metalness={0.5}
+          roughness={0.85}
+          metalness={0}
+          flatShading
         />
       </mesh>
       <Text
