@@ -1,45 +1,20 @@
 import type { StateCreator } from "zustand";
 
-export type ThemeId = "dreamy" | "cyber";
-
-const STORAGE_KEY = "enes.theme";
-
-function readPersistedTheme(): ThemeId {
-  if (typeof window === "undefined") return "dreamy";
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  return raw === "cyber" ? "cyber" : "dreamy";
-}
-
-function persistTheme(t: ThemeId): void {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, t);
-    document.documentElement.classList.toggle("dark", t === "cyber");
-  } catch {
-    /* Safari private mode etc. — ignore */
-  }
-}
+/**
+ * Cyber-only. The site is permanently dark/cyber; the slice is a typed
+ * constant so existing consumers (`useStore((s) => s.theme)`) compile
+ * without churn. No `setTheme`/`toggleTheme` because there's nothing
+ * to switch to.
+ */
+export type ThemeId = "cyber";
 
 export type ThemeSlice = {
   theme: ThemeId;
-  setTheme: (t: ThemeId) => void;
-  toggleTheme: () => void;
 };
 
-export const createThemeSlice: StateCreator<ThemeSlice, [], [], ThemeSlice> = (set, get) => {
-  const initial = readPersistedTheme();
+export const createThemeSlice: StateCreator<ThemeSlice, [], [], ThemeSlice> = () => {
   if (typeof document !== "undefined") {
-    document.documentElement.classList.toggle("dark", initial === "cyber");
+    document.documentElement.classList.add("dark");
   }
-  return {
-    theme: initial,
-    setTheme: (t) => {
-      persistTheme(t);
-      set({ theme: t });
-    },
-    toggleTheme: () => {
-      const next: ThemeId = get().theme === "dreamy" ? "cyber" : "dreamy";
-      persistTheme(next);
-      set({ theme: next });
-    },
-  };
+  return { theme: "cyber" };
 };

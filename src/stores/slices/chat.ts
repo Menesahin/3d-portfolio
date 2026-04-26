@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import type { Suggestion } from "@/types/tools";
 
 export type ChatMessage = {
   id: string;
@@ -19,6 +20,12 @@ export type ChatSlice = {
      * regenerated on `clearChat` so a new conversation gets fresh state.
      */
     threadId: string;
+    /**
+     * Follow-up chips the agent produced at the end of the last turn.
+     * Replaced wholesale on each `setSuggestions`; cleared the moment
+     * the user sends any message.
+     */
+    suggestions: Suggestion[];
   };
   toggleChat: () => void;
   openChat: () => void;
@@ -27,6 +34,8 @@ export type ChatSlice = {
   appendDelta: (delta: string) => void;
   finishStreaming: () => void;
   setStreaming: (streaming: boolean, controller?: AbortController | null) => void;
+  setSuggestions: (items: Suggestion[]) => void;
+  clearSuggestions: () => void;
   clearChat: () => void;
 };
 
@@ -43,6 +52,7 @@ export const createChatSlice: StateCreator<ChatSlice, [], [], ChatSlice> = (set,
     isStreaming: false,
     abortController: null,
     threadId: newThreadId(),
+    suggestions: [],
   },
   toggleChat: () => set((prev) => ({ chat: { ...prev.chat, isOpen: !prev.chat.isOpen } })),
   openChat: () => set((prev) => ({ chat: { ...prev.chat, isOpen: true } })),
@@ -53,7 +63,15 @@ export const createChatSlice: StateCreator<ChatSlice, [], [], ChatSlice> = (set,
     }));
   },
   appendMessage: (m) =>
-    set((prev) => ({ chat: { ...prev.chat, messages: [...prev.chat.messages, m] } })),
+    set((prev) => ({
+      chat: {
+        ...prev.chat,
+        messages: [...prev.chat.messages, m],
+        // Any user send clears the chip row — new chips arrive on the
+        // agent's next turn.
+        suggestions: m.role === "user" ? [] : prev.chat.suggestions,
+      },
+    })),
   appendDelta: (delta) =>
     set((prev) => {
       const msgs = prev.chat.messages;
@@ -92,6 +110,8 @@ export const createChatSlice: StateCreator<ChatSlice, [], [], ChatSlice> = (set,
         abortController: controller ?? (streaming ? prev.chat.abortController : null),
       },
     })),
+  setSuggestions: (items) => set((prev) => ({ chat: { ...prev.chat, suggestions: items } })),
+  clearSuggestions: () => set((prev) => ({ chat: { ...prev.chat, suggestions: [] } })),
   clearChat: () => {
     get().chat.abortController?.abort();
     set((prev) => ({
@@ -101,6 +121,7 @@ export const createChatSlice: StateCreator<ChatSlice, [], [], ChatSlice> = (set,
         isStreaming: false,
         abortController: null,
         threadId: newThreadId(),
+        suggestions: [],
       },
     }));
   },

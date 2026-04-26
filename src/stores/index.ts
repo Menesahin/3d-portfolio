@@ -1,12 +1,18 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import { createDispatcherSlice, type DispatcherSlice } from "./dispatcher";
 import { type ChatSlice, createChatSlice } from "./slices/chat";
 import { createLangSlice, type LangSlice } from "./slices/lang";
 import { createMascotSlice, type MascotSlice } from "./slices/mascot";
 import { createThemeSlice, type ThemeSlice } from "./slices/theme";
 import { createWorldSlice, type WorldSlice } from "./slices/world";
 
-export type AppState = ThemeSlice & LangSlice & MascotSlice & WorldSlice & ChatSlice;
+export type AppState = ThemeSlice &
+  LangSlice &
+  MascotSlice &
+  WorldSlice &
+  ChatSlice &
+  DispatcherSlice;
 
 export const useStore = create<AppState>()(
   subscribeWithSelector((...a) => ({
@@ -15,6 +21,7 @@ export const useStore = create<AppState>()(
     ...createMascotSlice(...a),
     ...createWorldSlice(...a),
     ...createChatSlice(...a),
+    ...createDispatcherSlice(...a),
   })),
 );
 
