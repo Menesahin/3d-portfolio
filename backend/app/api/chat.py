@@ -18,6 +18,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from app.agent.events import ChatRequest, ChatSuggestions, DoneEvent, ErrorEvent, TokenEvent
 from app.agent.fallback_suggestions import derive as derive_fallback_suggestions
 from app.agent.memory import register_thread
+from app.core.config import settings
 from app.core.logging import log
 from app.core.rate_limit import CHAT_LIMITS, limiter
 from app.deps import get_graph
@@ -80,6 +81,10 @@ async def chat(
         "configurable": {"thread_id": thread_id},
         "metadata": {"request_id": request_id, "thread_id": thread_id},
         "tags": ["chat"],
+        # Cap agent <-> tool steps. LangGraph default is 25; our ReAct loop
+        # typically fires 3-5 tools per turn so 12 protects against infinite
+        # tool loops if the model misbehaves. Tunable via LLM_RECURSION_LIMIT.
+        "recursion_limit": settings.llm_recursion_limit,
     }
     inputs = {"messages": _to_lc_messages(body)}
 
@@ -88,6 +93,12 @@ async def chat(
         # `chat.suggestions` event if the LLM forgets to call the tool.
         saw_suggestions = False
         last_content_event: dict | None = None
+        # Token-usage accumulator. With `stream_usage=True` on ChatOpenAI,
+        # a final AIMessageChunk arrives carrying `usage_metadata`. Multi-
+        # turn tool loops produce one usage chunk per LLM call — sum them
+        # so the per-turn log reflects total cost. Stays at zeros for
+        # providers/stubs that don't emit usage (e.g. test StubGraph).
+        usage_totals = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
 
         try:
             # First byte: request_id so the client can correlate with backend logs.
@@ -124,6 +135,16 @@ async def chat(
                             "token",
                             TokenEvent(delta=str(content)).model_dump(),
                         )
+                    # Capture usage_metadata from the closing chunk emitted
+                    # by `stream_usage=True`. Sum across LLM calls so a
+                    # multi-step tool loop reports cumulative tokens. Guard
+                    # with getattr/isinstance — chunks from non-OpenAI
+                    # providers or test stubs won't carry the field.
+                    usage = getattr(msg, "usage_metadata", None)
+                    if isinstance(usage, dict):
+                        usage_totals["input_tokens"] += int(usage.get("input_tokens", 0) or 0)
+                        usage_totals["output_tokens"] += int(usage.get("output_tokens", 0) or 0)
+                        usage_totals["total_tokens"] += int(usage.get("total_tokens", 0) or 0)
                 elif mode == "custom":
                     # Already a JSON-serialisable dict from tools.py `_emit`.
                     kind = payload.get("kind") if isinstance(payload, dict) else None
@@ -152,6 +173,18 @@ async def chat(
                 log.info("chat.suggestions_fallback", count=len(fallback))
 
             yield _sse("done", DoneEvent(request_id=request_id).model_dump())
+            # Token-usage telemetry. Logged only when the provider actually
+            # reported usage (totals stay at 0 for the test StubGraph and
+            # any non-OpenAI backend without `stream_usage` support), so
+            # cost dashboards don't get polluted with phantom zero rows.
+            if usage_totals["total_tokens"] > 0:
+                log.info(
+                    "chat.usage",
+                    input_tokens=usage_totals["input_tokens"],
+                    output_tokens=usage_totals["output_tokens"],
+                    total_tokens=usage_totals["total_tokens"],
+                    model=settings.llm_model,
+                )
             log.info("chat.done")
         except asyncio.CancelledError:
             log.info("chat.cancelled")

@@ -40,6 +40,25 @@ class Settings(BaseSettings):
         le=300,
         validation_alias=AliasChoices("LLM_TIMEOUT", "OPENAI_TIMEOUT"),
     )
+    # Cost + abuse caps. `max_tokens` bounds a single LLM response (a runaway
+    # or jailbroken reply otherwise consumes the model's full output budget,
+    # 16k+ on gpt-4.1). 1024 fits typical ~150-token portfolio replies with
+    # plenty of headroom; raise via env if a tool needs to dump long content.
+    llm_max_output_tokens: int = Field(
+        default=1024,
+        ge=64,
+        le=8192,
+        validation_alias=AliasChoices("LLM_MAX_OUTPUT_TOKENS", "OPENAI_MAX_TOKENS"),
+    )
+    # `recursion_limit` caps agent <-> tool steps inside one LangGraph turn.
+    # LangGraph's default is 25; our ReAct loop normally fires 3-5 tools per
+    # turn so 12 protects against runaway loops while leaving headroom.
+    llm_recursion_limit: int = Field(
+        default=12,
+        ge=4,
+        le=50,
+        validation_alias=AliasChoices("LLM_RECURSION_LIMIT", "LANGGRAPH_RECURSION_LIMIT"),
+    )
 
     # `NoDecode` skips the dotenv source's automatic JSON decoding so our
     # field_validator can accept the simpler "a,b,c" notation in .env files.

@@ -39,6 +39,15 @@ def _make_model() -> BaseChatModel:
             max_retries=3,
             timeout=settings.llm_timeout,
             streaming=True,
+            # Bound a single LLM reply so a jailbroken/runaway response
+            # cannot drain the model's full 16k+ output budget. Raise via
+            # env (LLM_MAX_OUTPUT_TOKENS) if a future tool dumps long prose.
+            max_tokens=settings.llm_max_output_tokens,
+            # Append a final AIMessageChunk carrying usage_metadata
+            # (input/output/total tokens) at end-of-stream. LangChain
+            # forwards OpenAI's `stream_options={"include_usage": true}`
+            # under the hood. The chat endpoint logs this for cost telemetry.
+            stream_usage=True,
         )
     raise ValueError(f"unknown llm_provider: {settings.llm_provider}")
 
