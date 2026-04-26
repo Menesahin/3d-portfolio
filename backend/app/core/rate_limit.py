@@ -21,6 +21,31 @@ from slowapi.util import get_remote_address
 
 from app.core.config import settings
 
+
+def _client_ip(request: Request) -> str:
+    """Derive the visitor IP, honouring `X-Forwarded-For` from the proxy.
+
+    Behind Railway / Fly / Nginx, `request.client.host` is the proxy's
+    address — every visitor hits the same key and the limiter throttles
+    the whole world together. The reverse proxy injects the real chain
+    in `X-Forwarded-For: <client>, <proxy1>, <proxy2>`; the leftmost
+    entry is the original visitor.
+
+    For direct local hits (curl against uvicorn), the header is absent
+    and we fall back to slowapi's stock `get_remote_address`.
+
+    Trust note: this is only safe when the deployment terminates HTTPS
+    at a known reverse proxy that overwrites/appends XFF. If the app is
+    ever exposed directly to the internet, an attacker can spoof XFF
+    and bypass rate limiting per-IP. Document this in the deploy guide.
+    """
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        leftmost = forwarded_for.split(",", 1)[0].strip()
+        if leftmost:
+            return leftmost
+    return get_remote_address(request)
+
 # Honour PYTEST_CURRENT_TEST so the existing /chat contract test (and any
 # future ones) don't get rate-limited just by running pytest. Operators can
 # also flip RATE_LIMIT_ENABLED=false in dev.
@@ -36,7 +61,7 @@ CHAT_LIMITS = [
 ]
 
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=_client_ip,
     enabled=_enabled,
     headers_enabled=True,  # adds X-RateLimit-* response headers
 )

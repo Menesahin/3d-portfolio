@@ -47,6 +47,14 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://localhost:5173", "http://127.0.0.1:5173"],
     )
 
+    # Allowed Host header values (anti host-header-injection). Same
+    # "a,b,c" env-var notation as cors_origins. Empty list rejects every
+    # request — fail-closed by design (see brief §2). In prod the operator
+    # sets TRUSTED_HOSTS=portfolio.example.com,api.example.com.
+    trusted_hosts: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["localhost", "127.0.0.1", "testserver", "test"],
+    )
+
     log_level: str = "INFO"
 
     # Per-IP rate limiting on /chat. Defaults are operator-tunable via env.
@@ -99,6 +107,42 @@ class Settings(BaseSettings):
             cleaned.append(stripped)
         if not cleaned:
             raise ValueError("cors_origins must list at least one origin")
+        return cleaned
+
+    @field_validator("trusted_hosts", mode="before")
+    @classmethod
+    def _split_trusted_hosts(cls, v: object) -> object:
+        # Mirror _split_cors_origins so operators get one consistent
+        # "a,b,c" notation across the env-var surface.
+        if isinstance(v, str):
+            stripped = v.strip()
+            if stripped.startswith("["):
+                import json
+
+                return json.loads(stripped)
+            return [item.strip() for item in stripped.split(",") if item.strip()]
+        return v
+
+    @field_validator("trusted_hosts", mode="after")
+    @classmethod
+    def _validate_trusted_hosts(cls, v: list[str]) -> list[str]:
+        # Fail-closed: an empty/whitespace-only env var must NOT silently
+        # become "*". Force the operator to be explicit. Reject "*" too,
+        # since the whole point is host-header injection defense.
+        cleaned: list[str] = []
+        for entry in v:
+            stripped = entry.strip()
+            if not stripped:
+                continue
+            if stripped == "*":
+                raise ValueError(
+                    "trusted_hosts must list explicit hostnames; '*' is not allowed",
+                )
+            cleaned.append(stripped)
+        if not cleaned:
+            raise ValueError(
+                "trusted_hosts must list at least one hostname (fail-closed)",
+            )
         return cleaned
 
 

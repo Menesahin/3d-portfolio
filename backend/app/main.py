@@ -11,12 +11,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.agent.graph import build_graph
 from app.api import chat, health
 from app.core.config import settings
 from app.core.logging import configure_logging, log
 from app.core.rate_limit import limiter, rate_limit_exceeded_handler
+from app.core.security_headers import SecurityHeadersMiddleware
 
 
 @asynccontextmanager
@@ -45,6 +47,23 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
+# Middleware ordering note: `add_middleware` prepends, so the LAST call
+# becomes the OUTERMOST wrapper. Desired outer→inner stack:
+#
+#   CORSMiddleware            (outermost — preflight 204s must escape
+#                              even if inner middleware throws)
+#   SecurityHeadersMiddleware (stamps headers on every response, including
+#                              CORS preflights and TrustedHost 400s)
+#   TrustedHostMiddleware     (innermost gate — rejects bad Host headers
+#                              before any route handler runs)
+#
+# Add order is therefore the reverse: TrustedHost first, then headers,
+# then CORS last.
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=settings.trusted_hosts,
+)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
