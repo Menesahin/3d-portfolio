@@ -3,28 +3,13 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* -------------------------------------------------------------------------- */
-/*  Design tokens                                                              */
-/*  Dreamy theme (default, editorial) + Cyber theme (dark, neon).              */
+/*  Design tokens — Cyber-only.                                                */
 /*  R3F materials read these via getComputedStyle(documentElement).            */
 /* -------------------------------------------------------------------------- */
 @theme {
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  /* Dreamy (default) */
-  --color-bg: oklch(0.97 0.02 80);           /* warm cream */
-  --color-fg: oklch(0.18 0.02 260);          /* deep navy ink */
-  --color-muted: oklch(0.60 0.02 260);
-  --color-accent: oklch(0.70 0.18 20);       /* coral */
-  --color-island: oklch(0.94 0.02 80);
-  --color-plinth: oklch(0.88 0.02 60);
-  --color-sky-start: oklch(0.95 0.03 70);    /* peach */
-  --color-sky-end: oklch(0.88 0.08 300);     /* lavender */
-  --color-fog: oklch(0.95 0.02 70);
-}
-
-/* Cyber theme activates when <html class="dark"> */
-.dark {
   --color-bg: oklch(0.09 0.02 260);
   --color-fg: oklch(0.96 0.01 200);
   --color-muted: oklch(0.55 0.03 260);
@@ -35,6 +20,10 @@
   --color-sky-start: oklch(0.05 0.02 260);
   --color-sky-end: oklch(0.10 0.03 260);
   --color-fog: oklch(0.05 0.02 260);
+
+  /* Holographic surface — shared by Chat dock + 3D hologram panel. */
+  --holo-bg: oklch(0.08 0.02 260 / 0.88);
+  --holo-edge: oklch(0.80 0.25 200 / 0.6);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -58,6 +47,157 @@ body {
 /* Always let the canvas fill the viewport under the 2D chrome */
 canvas {
   display: block;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Holographic surface — shared by Chat dock, Debug panel, any HUD plate.    */
+/*  Matches the 3D `<Hologram>` panel's look: translucent dark plate +        */
+/*  thin accent edge + subtle accent glow. Backdrop-blur for depth when the   */
+/*  scene behind is busy.                                                      */
+/* -------------------------------------------------------------------------- */
+.holo-surface,
+.holo-chip {
+  background: var(--holo-bg);
+  border: 1px solid var(--holo-edge);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  /* The holo plate is always dark — keep --color-fg legible inside this
+     subtree even if the page bg ever shifts. */
+  --color-fg: oklch(0.96 0.02 80);
+}
+
+.holo-surface {
+  color: var(--color-fg);
+}
+
+.holo-chip {
+  color: var(--color-fg);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Holographic link chrome — shared by in-world `<Html>` anchors inside       */
+/*  the hologram panels (contact links, project "Open live ↗", etc).          */
+/* -------------------------------------------------------------------------- */
+.holo-link-stack {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+  /* No gap between rows — we separate them with a single hairline  */
+  /* accent divider instead of 3 individually-bordered pills.        */
+}
+.holo-link-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.holo-link-row + .holo-link-row {
+  border-top: 1px solid color-mix(in oklch, var(--color-accent) 22%, transparent);
+}
+.holo-link-row:hover {
+  background: color-mix(in oklch, var(--color-accent) 12%, transparent);
+}
+.holo-link-glyph {
+  width: 20px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-accent);
+  opacity: 0.85;
+}
+.holo-link-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #eef4ff;
+}
+.holo-link-copy {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-accent);
+  opacity: 0.55;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.12s ease, background 0.12s ease;
+}
+.holo-link-copy:hover {
+  opacity: 1;
+  background: color-mix(in oklch, var(--color-accent) 18%, transparent);
+}
+
+.holo-open-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-accent) 20%, rgba(6, 10, 22, 0.7));
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  box-shadow: 0 0 12px -4px var(--color-accent);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.holo-open-link:hover {
+  background: color-mix(in oklch, var(--color-accent) 38%, rgba(6, 10, 22, 0.7));
+  transform: translateY(-1px);
+}
+
+/* Twitch-style chat feed — fade-out mask at the top so older messages
+   dissolve into the scene instead of hitting a hard edge. Scrollbar
+   is slim + accent-tinted so it's reachable without dominating. */
+.chat-feed {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 100%);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--color-accent) 55%, transparent) transparent;
+  overscroll-behavior: contain;
+}
+.chat-feed::-webkit-scrollbar {
+  width: 5px;
+}
+.chat-feed::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-feed::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--color-accent) 55%, transparent);
+  border-radius: 999px;
+}
+.chat-feed::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* Incoming chat line — small slide + fade-in so new messages read as
+   "live" without jank. */
+.chat-line {
+  animation: chat-pop 0.28s ease-out both;
+}
+@keyframes chat-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Reduce motion: respected inside the R3F layer too (see usePrefersReducedMotion) */

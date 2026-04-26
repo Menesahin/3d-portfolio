@@ -3,13 +3,12 @@ import { useDebugMode } from "@/hooks/useDebugMode";
 import { useT } from "@/hooks/useT";
 import { useStore } from "@/stores";
 import { ChatDock } from "@/ui/ChatDock";
-import { ContentPanel } from "@/ui/ContentPanel";
 import { DebugPanel } from "@/ui/DebugPanel";
+import { ErrorBoundary } from "@/ui/ErrorBoundary";
 import { EventTicker } from "@/ui/EventTicker";
 import { Footer } from "@/ui/Footer";
 import { LangSelector } from "@/ui/LangSelector";
 import { SplashScreen } from "@/ui/SplashScreen";
-import { ThemeToggle } from "@/ui/ThemeToggle";
 
 const Scene = lazy(() => import("./Scene"));
 const ChatLab = lazy(() => import("./chat-lab/ChatLab"));
@@ -38,25 +37,26 @@ function Portfolio() {
 
   return (
     <div className="relative h-full w-full">
-      {/* The 3D world fills the viewport */}
-      <Suspense fallback={<SplashScreen />}>
-        <Scene />
-      </Suspense>
+      {/* The 3D world fills the viewport. ErrorBoundary downgrades to
+          a static splash if the GLB / shader / Canvas crashes — chat
+          dock + header keep working. */}
+      <ErrorBoundary fallback={<SplashScreen />}>
+        <Suspense fallback={<SplashScreen />}>
+          <Scene />
+        </Suspense>
+      </ErrorBoundary>
 
       {/* Top-right controls */}
       <div className="pointer-events-none fixed right-4 top-4 z-20 flex items-center gap-2">
         <div className="pointer-events-auto">
           <LangSelector />
         </div>
-        <div className="pointer-events-auto">
-          <ThemeToggle />
-        </div>
       </div>
 
       {/* Top-left: identity tag */}
       <div className="pointer-events-none fixed left-4 top-4 z-20">
-        <div className="pointer-events-auto rounded-full border border-[var(--color-fg)]/10 bg-[var(--color-bg)]/80 px-3 py-1.5 text-xs text-[var(--color-fg)] backdrop-blur-md shadow-sm">
-          <span className="font-semibold">{t.meta.name}</span>
+        <div className="holo-chip pointer-events-auto rounded-full px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider">
+          <span className="text-[var(--color-accent)]">{t.meta.name}</span>
           <span className="mx-1.5 text-[var(--color-fg)]/40">·</span>
           <span className="text-[var(--color-fg)]/70">{t.meta.role}</span>
         </div>
@@ -64,9 +64,6 @@ function Portfolio() {
 
       {/* Chat dock */}
       <ChatDock />
-
-      {/* Side content panel (driven by content.* tool events) */}
-      <ContentPanel />
 
       {/* Debug panel + live UI-event ticker (only when ?debug=1) */}
       {debug && <DebugPanel />}
