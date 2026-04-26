@@ -117,11 +117,28 @@ pnpm dev                         # http://localhost:5173
 # backend (separate shell)
 cd backend
 cp .env.example .env             # set OPENAI_API_KEY (or LLM_API_KEY)
-uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8000 --workers 1
 ```
 
 CORS defaults to `http://localhost:5173` and `http://127.0.0.1:5173`;
 see `backend/app/core/config.py` for the validator.
+
+---
+
+## Deploy
+
+> **IMPORTANT: deploy with `--workers 1` only.**
+> InMemorySaver (LangGraph checkpointer) and slowapi's in-memory store
+> both live in-process. Multiple workers silo their state silently and
+> leak rate-limit + session guarantees — a visitor's chat thread can
+> land on a worker that has never seen their `thread_id`, and rate-limit
+> counters split N ways. Swap to `AsyncRedisSaver` + a Redis-backed
+> slowapi store before scaling out.
+
+The shipped `backend/Dockerfile` pins `--workers 1` in its CMD; if you
+run uvicorn directly (systemd, Procfile, k8s manifest, etc.), set the
+same flag yourself. Horizontal scaling = Redis first, more workers
+second.
 
 ---
 

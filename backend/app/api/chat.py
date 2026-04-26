@@ -6,6 +6,7 @@ propagate so LangGraph can tear its task tree down when the browser leaves.
 """
 import asyncio
 import json
+import re
 import time
 import uuid
 from collections.abc import AsyncIterator
@@ -42,12 +43,76 @@ def _sse(event: str, data: dict | str) -> str:
     return f"event: {event}\ndata: {payload}\n\n"
 
 
+# ---------------------------------------------------------------------------
+#  Input sanitisation — defence-in-depth layer for prompt-injection markers.
+#
+#  This is NOT a substitute for the persona's instruction-resistance prefix;
+#  it strips obvious tokens that mimic role boundaries (chat-template fakes,
+#  system-tag bait) before the message reaches the agent. Pydantic already
+#  caps total length at 4000 chars; we only care about pattern removal here.
+# ---------------------------------------------------------------------------
+
+# Control-character stripper — keep \n (\x0a) and \t (\x09); strip the rest of
+# the C0 range plus DEL (\x7f). Modern terminals/JSON shouldn't carry these.
+_CONTROL_CHARS_RE = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
+
+# Role-boundary / chat-template markers that attackers paste to fake a system
+# turn. Case-insensitive. We delete the token outright — replacing with a
+# space would still let the surrounding text read like an instruction header.
+_INJECTION_MARKERS_RE = re.compile(
+    r"(?i)("
+    r"<\s*/?\s*system[^>]*>"
+    r"|<\s*/?\s*assistant[^>]*>"
+    r"|<\s*/?\s*user[^>]*>"
+    r"|\[/?INST\]"
+    r"|<\|im_start\|>"
+    r"|<\|im_end\|>"
+    r"|<\|endoftext\|>"
+    r"|###\s*(?:system|instruction|assistant|user|human)\s*:?"
+    r")"
+)
+
+# Cap consecutive newlines at 2 so a wall of blanks can't create a fake gap
+# that visually re-frames text as a new "section" to the model.
+_NEWLINE_RUN_RE = re.compile(r"\n{3,}")
+
+
+def _sanitise_user_content(content: str) -> tuple[str, bool]:
+    """Strip control chars + chat-template-style injection markers.
+
+    Returns the cleaned content and a flag indicating whether any pattern
+    matched, so the caller can emit a structured warning log when it does.
+    """
+    matched = False
+    cleaned = _CONTROL_CHARS_RE.sub("", content)
+    if cleaned != content:
+        matched = True
+    after_markers = _INJECTION_MARKERS_RE.sub("", cleaned)
+    if after_markers != cleaned:
+        matched = True
+    collapsed = _NEWLINE_RUN_RE.sub("\n\n", after_markers)
+    return collapsed, matched
+
+
 def _to_lc_messages(req: ChatRequest) -> list:
-    """Convert incoming role/content pairs to LangChain messages."""
+    """Convert incoming role/content pairs to LangChain messages.
+
+    User content is run through `_sanitise_user_content` first so chat-
+    template / role-tag injection markers are stripped before the agent
+    sees them. Assistant + system roles in the request are echoes of prior
+    server-emitted content (replayed history) and are left untouched.
+    """
     out: list = []
     for m in req.messages:
         if m.role == "user":
-            out.append(HumanMessage(content=m.content))
+            cleaned, matched = _sanitise_user_content(m.content)
+            if matched:
+                log.warning(
+                    "chat.input_sanitised",
+                    original_length=len(m.content),
+                    cleaned_length=len(cleaned),
+                )
+            out.append(HumanMessage(content=cleaned))
         elif m.role == "assistant":
             out.append(AIMessage(content=m.content))
         elif m.role == "system":
