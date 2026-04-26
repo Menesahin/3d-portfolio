@@ -19,14 +19,14 @@ export const cyber: WorldTheme = {
   },
   fog: {
     near: 15,
-    far: 60,
+    far: 54,
   },
   particles: "grid-sparks",
   postFX: {
-    bloom: 0.9,
-    chromaticAberration: true,
-    scanlines: true,
-    vignette: 0.75,
+    bloom: 0.55,
+    chromaticAberration: false,
+    scanlines: false,
+    vignette: 0.55,
   },
   exposure: 0.9,
 };

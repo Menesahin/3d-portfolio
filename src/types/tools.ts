@@ -34,9 +34,23 @@ export type CameraTarget = ZoneId | "hub" | "overview";
 export type CameraZoom = "close" | "medium" | "wide";
 export type DartDirection = "up" | "down" | "left" | "right" | "away";
 
-export type ProjectId = "vocabuddy" | "shotmock" | "claude-voice";
+export type ProjectId = "vocabuddy" | "shotmock" | "claude-voice" | "thecupxi";
 export type CompanyId = "nar-sistem" | "formica" | "ing-bank";
 export type SkillGroup = "ai" | "backend" | "frontend" | "devops";
+
+/**
+ * Chat follow-up suggestion chip. Emitted by the agent's
+ * `suggest_followups` tool at the end of every turn so the visitor has
+ * a clear next step. Clicking a chip sends `prompt` as a new message.
+ */
+export type Suggestion = {
+  /** Stable React key, e.g. "proj-shotmock" */
+  id: string;
+  /** Chip caption — keep ≤ 28 chars, same language as the user */
+  label: string;
+  /** Text sent when the chip is clicked, ≤ 80 chars */
+  prompt: string;
+};
 
 /**
  * Discriminated union of every possible UI event the agent can emit.
@@ -58,14 +72,13 @@ export type UiEvent =
   | { kind: "mascot.emote"; icon: EmoteIcon }
   | { kind: "mascot.expression"; face: MascotExpression }
   /* World */
-  | { kind: "world.highlight_zone"; zone: ZoneId }
-  | { kind: "world.show_hologram"; zone: ZoneId; contentId: string }
-  | { kind: "world.activate_terminal" }
   | { kind: "world.reset" }
-  /* Content (side panels) */
+  /* Content (drives the specialized hologram scenes) */
   | { kind: "content.experience"; company: CompanyId }
   | { kind: "content.project"; project: ProjectId }
   | { kind: "content.skill_group"; group: SkillGroup }
-  | { kind: "content.contact_card" };
+  | { kind: "content.contact_card" }
+  /* Chat follow-up chips */
+  | { kind: "chat.suggestions"; items: Suggestion[] };
 
 export type UiEventKind = UiEvent["kind"];

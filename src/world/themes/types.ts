@@ -11,13 +11,13 @@ export type WorldTheme = {
     ink: string;
     /** Accent color used for highlights, emission. */
     accent: string;
-    /** Secondary accent (cyber: magenta; dreamy: coral variant). */
+    /** Secondary accent (cyber: magenta). */
     accent2: string;
     /** Island surface colour. */
     island: string;
     /** Plinth / exhibit surface colour. */
     plinth: string;
-    /** Fog colour (matches sky bottom in dreamy). */
+    /** Fog colour. */
     fog: string;
   };
   lighting: {
