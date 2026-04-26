@@ -20,7 +20,12 @@ from app.core.logging import configure_logging, log
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     configure_logging(settings.log_level)
-    log.info("startup", model=settings.openai_model, cors=settings.cors_origins)
+    log.info(
+        "startup",
+        provider=settings.llm_provider,
+        model=settings.llm_model,
+        cors=settings.cors_origins,
+    )
     async with build_graph() as graph:
         app.state.graph = graph
         yield

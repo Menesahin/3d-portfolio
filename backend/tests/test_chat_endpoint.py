@@ -20,6 +20,11 @@ class StubGraph:
     """Pretends to be a LangGraph `CompiledStateGraph`. Only implements
     `.astream(...)` — the only method `api/chat.py` calls."""
 
+    # `chat.py` reads `graph.checkpointer` to register the thread for
+    # LRU eviction. Tests don't exercise that path; `None` makes the
+    # call a no-op.
+    checkpointer = None
+
     async def astream(
         self,
         _inputs: dict[str, Any],

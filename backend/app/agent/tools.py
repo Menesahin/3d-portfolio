@@ -16,6 +16,7 @@ from app.agent.events import (
     CameraTarget,
     CameraZoom,
     CameraZoomEvent,
+    ChatSuggestions,
     CompanyId,
     ContentContactCard,
     ContentExperience,
@@ -25,21 +26,20 @@ from app.agent.events import (
     EmoteIcon,
     MascotDart,
     MascotEmote,
-    MascotExpressionEvent,
     MascotExpression,
+    MascotExpressionEvent,
     MascotGesture,
     MascotGestureEvent,
     MascotMove,
     MascotOrbit,
     MascotPointAt,
     MascotReturnToHub,
+    PointAtTarget,
     ProjectId,
     SkillGroup,
+    Suggestion,
     UiEvent,
-    WorldActivateTerminal,
-    WorldHighlightZone,
     WorldReset,
-    WorldShowHologram,
     ZoneId,
 )
 
@@ -55,6 +55,16 @@ def _ack(message: str, tool_call_id: str) -> Command:
     return Command(update={"messages": [ToolMessage(content=message, tool_call_id=tool_call_id)]})
 
 
+def _emit_ack(event: UiEvent, ack: str, tool_call_id: str) -> Command:
+    """Common pattern for the 14 simple "fire UI event + ack" tools.
+    Kept as a thin helper rather than a @tool factory — LangChain's
+    `@tool` decorator inspects the function signature + name + docstring,
+    so the explicit-function-per-tool shape stays. This collapses the
+    inside of each tool from two statements to one."""
+    _emit(event)
+    return _ack(ack, tool_call_id)
+
+
 # ---------------------------------------------------------------------------
 #  Camera
 # ---------------------------------------------------------------------------
@@ -66,8 +76,7 @@ def camera_focus(
     duration: float | None = None,
 ) -> Command:
     """Dolly the camera to a named zone or "overview". Smooth cinematic transition."""
-    _emit(CameraFocus(target=target, duration=duration))
-    return _ack(f"camera focused on {target}", tool_call_id)
+    return _emit_ack(CameraFocus(target=target, duration=duration), f"camera focused on {target}", tool_call_id)
 
 
 @tool
@@ -76,8 +85,7 @@ def camera_zoom(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Zoom the camera to close / medium / wide around the current target."""
-    _emit(CameraZoomEvent(level=level))
-    return _ack(f"camera zoom set to {level}", tool_call_id)
+    return _emit_ack(CameraZoomEvent(level=level), f"camera zoom set to {level}", tool_call_id)
 
 
 # ---------------------------------------------------------------------------
@@ -90,8 +98,7 @@ def mascot_move_to(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Fly the mascot to the given zone (or back to 'hub')."""
-    _emit(MascotMove(zone=zone))
-    return _ack(f"mascot moving to {zone}", tool_call_id)
+    return _emit_ack(MascotMove(zone=zone), f"mascot moving to {zone}", tool_call_id)
 
 
 @tool
@@ -101,8 +108,7 @@ def mascot_orbit(
     revolutions: int | None = None,
 ) -> Command:
     """Orbit the mascot around a zone (default: 1 full revolution)."""
-    _emit(MascotOrbit(target=target, revolutions=revolutions))
-    return _ack(f"mascot orbiting {target}", tool_call_id)
+    return _emit_ack(MascotOrbit(target=target, revolutions=revolutions), f"mascot orbiting {target}", tool_call_id)
 
 
 @tool
@@ -111,8 +117,7 @@ def mascot_dart(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Short, playful dart — up / down / left / right / away. Use for cute reactions."""
-    _emit(MascotDart(direction=direction))
-    return _ack(f"mascot darted {direction}", tool_call_id)
+    return _emit_ack(MascotDart(direction=direction), f"mascot darted {direction}", tool_call_id)
 
 
 @tool
@@ -120,8 +125,7 @@ def mascot_return_to_hub(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Send the mascot back to the central hub island."""
-    _emit(MascotReturnToHub())
-    return _ack("mascot returning to hub", tool_call_id)
+    return _emit_ack(MascotReturnToHub(), "mascot returning to hub", tool_call_id)
 
 
 # ---------------------------------------------------------------------------
@@ -134,18 +138,16 @@ def mascot_gesture(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Trigger a full-body gesture clip (wave, point, bow, dance, ...)."""
-    _emit(MascotGestureEvent(gesture=gesture))
-    return _ack(f"mascot gestured {gesture}", tool_call_id)
+    return _emit_ack(MascotGestureEvent(gesture=gesture), f"mascot gestured {gesture}", tool_call_id)
 
 
 @tool
 def mascot_point_at(
-    target: ZoneId,
+    target: PointAtTarget,
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Point the mascot's body/arm at a target zone or at the user."""
-    _emit(MascotPointAt(target=target))
-    return _ack(f"mascot pointing at {target}", tool_call_id)
+    return _emit_ack(MascotPointAt(target=target), f"mascot pointing at {target}", tool_call_id)
 
 
 @tool
@@ -154,8 +156,7 @@ def mascot_emote(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Pop a glyph above the mascot's head (heart / question / sparkle / ...)."""
-    _emit(MascotEmote(icon=icon))
-    return _ack(f"mascot emoted {icon}", tool_call_id)
+    return _emit_ack(MascotEmote(icon=icon), f"mascot emoted {icon}", tool_call_id)
 
 
 @tool
@@ -164,8 +165,7 @@ def mascot_expression(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Set the mascot face expression (idle, happy, surprised, thinking, sad, wink)."""
-    _emit(MascotExpressionEvent(face=face))
-    return _ack(f"mascot expression → {face}", tool_call_id)
+    return _emit_ack(MascotExpressionEvent(face=face), f"mascot expression -> {face}", tool_call_id)
 
 
 # ---------------------------------------------------------------------------
@@ -173,43 +173,11 @@ def mascot_expression(
 # ---------------------------------------------------------------------------
 
 @tool
-def world_highlight_zone(
-    zone: ZoneId,
-    tool_call_id: Annotated[str, InjectedToolCallId],
-) -> Command:
-    """Soft glow pulse on the given zone to draw attention."""
-    _emit(WorldHighlightZone(zone=zone))
-    return _ack(f"zone {zone} highlighted", tool_call_id)
-
-
-@tool
-def world_show_hologram(
-    zone: ZoneId,
-    contentId: str,  # noqa: N803 — camelCase to match frontend event shape
-    tool_call_id: Annotated[str, InjectedToolCallId],
-) -> Command:
-    """Activate a hologram panel over a zone with the given contentId
-    (e.g. 'formica', 'vocabuddy')."""
-    _emit(WorldShowHologram(zone=zone, contentId=contentId))
-    return _ack(f"hologram active: {zone}/{contentId}", tool_call_id)
-
-
-@tool
-def world_activate_terminal(
-    tool_call_id: Annotated[str, InjectedToolCallId],
-) -> Command:
-    """Turn on the Contact terminal so the mascot can reveal contact details."""
-    _emit(WorldActivateTerminal())
-    return _ack("contact terminal activated", tool_call_id)
-
-
-@tool
 def world_reset(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
-    """Clear holograms and highlights; return the world to baseline."""
-    _emit(WorldReset())
-    return _ack("world reset", tool_call_id)
+    """Clear any active hologram and return the world to baseline."""
+    return _emit_ack(WorldReset(), "world reset", tool_call_id)
 
 
 # ---------------------------------------------------------------------------
@@ -222,8 +190,7 @@ def content_experience(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Render an experience detail card for a company."""
-    _emit(ContentExperience(company=company))
-    return _ack(f"showing experience: {company}", tool_call_id)
+    return _emit_ack(ContentExperience(company=company), f"showing experience: {company}", tool_call_id)
 
 
 @tool
@@ -232,8 +199,7 @@ def content_project(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Render a project detail card."""
-    _emit(ContentProject(project=project))
-    return _ack(f"showing project: {project}", tool_call_id)
+    return _emit_ack(ContentProject(project=project), f"showing project: {project}", tool_call_id)
 
 
 @tool
@@ -242,8 +208,7 @@ def content_skill_group(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Render a skill group detail card (ai / backend / frontend / devops)."""
-    _emit(ContentSkillGroup(group=group))
-    return _ack(f"showing skills: {group}", tool_call_id)
+    return _emit_ack(ContentSkillGroup(group=group), f"showing skills: {group}", tool_call_id)
 
 
 @tool
@@ -251,8 +216,34 @@ def content_contact_card(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Render the contact card (email, LinkedIn, location)."""
-    _emit(ContentContactCard())
-    return _ack("showing contact card", tool_call_id)
+    return _emit_ack(ContentContactCard(), "showing contact card", tool_call_id)
+
+
+# ---------------------------------------------------------------------------
+#  Chat hint chips
+# ---------------------------------------------------------------------------
+
+@tool
+def suggest_followups(
+    items: list[Suggestion],
+    tool_call_id: Annotated[str, InjectedToolCallId],
+) -> Command:
+    """Offer the user 3–5 short follow-up chips that guide what to ask next.
+
+    Call this ONCE at the end of every substantive turn. `items` is a list
+    of {id, label, prompt}:
+      - `id`:     stable key, snake_case (e.g. "proj-shotmock")
+      - `label`:  chip caption, ≤ 28 chars, in the user's language
+      - `prompt`: what gets sent when the chip is clicked, ≤ 80 chars
+
+    Keep labels tight and complementary — don't repeat the topic you just
+    covered. Examples after showing Vocabuddy:
+      {id:"proj-shot", label:"ShotMock", prompt:"Tell me about ShotMock"},
+      {id:"proj-cv", label:"Claude Voice", prompt:"And Claude Voice?"},
+      {id:"exp", label:"Experience", prompt:"What's Enes's work experience?"},
+      {id:"contact", label:"Contact", prompt:"How can I reach Enes?"},
+    """
+    return _emit_ack(ChatSuggestions(items=items), f"{len(items)} follow-up chips shown", tool_call_id)
 
 
 # ---------------------------------------------------------------------------
@@ -270,12 +261,10 @@ ALL_TOOLS = [
     mascot_point_at,
     mascot_emote,
     mascot_expression,
-    world_highlight_zone,
-    world_show_hologram,
-    world_activate_terminal,
     world_reset,
     content_experience,
     content_project,
     content_skill_group,
     content_contact_card,
+    suggest_followups,
 ]

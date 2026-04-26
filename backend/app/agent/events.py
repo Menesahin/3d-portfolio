@@ -15,6 +15,9 @@ from pydantic import BaseModel, Field
 
 ZoneId = Literal["hub", "experience", "projects", "skills", "gallery", "contact"]
 CameraTarget = Literal["hub", "experience", "projects", "skills", "gallery", "contact", "overview"]
+# `point_at` accepts every zone the camera knows plus the special "user"
+# sentinel, which the mascot interprets as "look out at the visitor".
+PointAtTarget = Literal["hub", "experience", "projects", "skills", "gallery", "contact", "user"]
 CameraZoom = Literal["close", "medium", "wide"]
 DartDirection = Literal["up", "down", "left", "right", "away"]
 
@@ -26,7 +29,7 @@ MascotGesture = Literal[
 ]
 MascotExpression = Literal["idle", "happy", "surprised", "thinking", "sad", "wink"]
 
-ProjectId = Literal["vocabuddy", "shotmock", "claude-voice"]
+ProjectId = Literal["vocabuddy", "shotmock", "claude-voice", "thecupxi"]
 CompanyId = Literal["nar-sistem", "formica", "ing-bank"]
 SkillGroup = Literal["ai", "backend", "frontend", "devops"]
 
@@ -73,7 +76,7 @@ class MascotGestureEvent(BaseModel):
 
 class MascotPointAt(BaseModel):
     kind: Literal["mascot.point_at"] = "mascot.point_at"
-    target: Literal["hub", "experience", "projects", "skills", "gallery", "contact", "user"]
+    target: PointAtTarget
 
 
 class MascotEmote(BaseModel):
@@ -84,21 +87,6 @@ class MascotEmote(BaseModel):
 class MascotExpressionEvent(BaseModel):
     kind: Literal["mascot.expression"] = "mascot.expression"
     face: MascotExpression
-
-
-class WorldHighlightZone(BaseModel):
-    kind: Literal["world.highlight_zone"] = "world.highlight_zone"
-    zone: ZoneId
-
-
-class WorldShowHologram(BaseModel):
-    kind: Literal["world.show_hologram"] = "world.show_hologram"
-    zone: ZoneId
-    contentId: str  # noqa: N815 — camelCase intentional (matches frontend)
-
-
-class WorldActivateTerminal(BaseModel):
-    kind: Literal["world.activate_terminal"] = "world.activate_terminal"
 
 
 class WorldReset(BaseModel):
@@ -124,6 +112,19 @@ class ContentContactCard(BaseModel):
     kind: Literal["content.contact_card"] = "content.contact_card"
 
 
+# Chat-layer hint chips — short follow-up prompts the agent offers after
+# a substantive turn so the visitor knows what to ask next.
+class Suggestion(BaseModel):
+    id: str
+    label: str  # ≤ 28 chars, shown in the chip
+    prompt: str  # ≤ 80 chars, what gets sent when the chip is clicked
+
+
+class ChatSuggestions(BaseModel):
+    kind: Literal["chat.suggestions"] = "chat.suggestions"
+    items: list[Suggestion] = Field(min_length=1, max_length=5)
+
+
 UiEvent = Annotated[
     Union[  # noqa: UP007 — Pydantic discriminator needs `Union`
         CameraFocus,
@@ -136,14 +137,12 @@ UiEvent = Annotated[
         MascotPointAt,
         MascotEmote,
         MascotExpressionEvent,
-        WorldHighlightZone,
-        WorldShowHologram,
-        WorldActivateTerminal,
         WorldReset,
         ContentExperience,
         ContentProject,
         ContentSkillGroup,
         ContentContactCard,
+        ChatSuggestions,
     ],
     Field(discriminator="kind"),
 ]
@@ -179,9 +178,14 @@ class ErrorEvent(BaseModel):
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant", "system"]
-    content: str
+    # Caps prevent prompt-stuffing attacks that would balloon OpenAI cost.
+    # 4000 chars is comfortably more than a thoughtful question.
+    content: str = Field(min_length=1, max_length=4000)
 
 
 class ChatRequest(BaseModel):
-    messages: list[ChatMessage]
-    thread_id: str | None = None
+    # 20 messages caps the rolling history a client can send. The agent's
+    # checkpointer holds the long-term context server-side; the request
+    # body only needs the most recent turns.
+    messages: list[ChatMessage] = Field(min_length=1, max_length=20)
+    thread_id: str | None = Field(default=None, max_length=128)

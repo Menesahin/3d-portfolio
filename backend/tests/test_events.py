@@ -18,9 +18,12 @@ def test_should_reject_mascot_emote_when_icon_is_invalid() -> None:
         _adapter.validate_python({"kind": "mascot.emote", "icon": "not-a-real-emote"})
 
 
-def test_should_parse_world_show_hologram_when_given_contentId() -> None:
-    ev = _adapter.validate_python(
-        {"kind": "world.show_hologram", "zone": "experience", "contentId": "formica"},
-    )
-    assert ev.kind == "world.show_hologram"
-    assert ev.contentId == "formica"
+def test_should_parse_content_project_when_given_valid_project() -> None:
+    ev = _adapter.validate_python({"kind": "content.project", "project": "thecupxi"})
+    assert ev.kind == "content.project"
+    assert ev.project == "thecupxi"
+
+
+def test_should_reject_content_project_when_project_id_is_unknown() -> None:
+    with pytest.raises(ValidationError):
+        _adapter.validate_python({"kind": "content.project", "project": "not-a-real-project"})
