@@ -80,6 +80,28 @@ async def chat(
     # eventually get evicted instead of growing the saver forever.
     if graph.checkpointer is not None:
         register_thread(graph.checkpointer, thread_id)
+        # Watchdog: warn when a thread's persisted history grows past the
+        # configured cap. Pydantic already caps each *inbound* body at 20
+        # messages and the 256-thread LRU evicts cold threads, but the
+        # checkpointer itself accumulates every turn — so a single chatty
+        # visitor can still balloon their thread state. We don't trim here
+        # (would need `RemoveMessage` + `aupdate_state`, out of v1 scope);
+        # logging gives us prod signal to know if this is real.
+        try:
+            state = await graph.aget_state(
+                {"configurable": {"thread_id": thread_id}},
+            )
+            history = state.values.get("messages", []) if state and state.values else []
+            if len(history) > settings.max_thread_history:
+                log.warning(
+                    "chat.thread_history_exceeded",
+                    thread_id=thread_id,
+                    history_len=len(history),
+                    cap=settings.max_thread_history,
+                )
+        except Exception:
+            # Don't let an introspection failure block the actual turn.
+            log.exception("chat.thread_history_check_failed", thread_id=thread_id)
     log.info("chat.start", msg_count=len(body.messages))
 
     config = {

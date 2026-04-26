@@ -93,6 +93,21 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("SSE_MAX_DURATION_SECONDS", "CHAT_TIMEOUT_SECONDS"),
     )
 
+    # Per-thread message-history watchdog. The `InMemorySaver` keeps
+    # unbounded message history per `thread_id` — a single visitor who
+    # sends hundreds of turns will balloon their thread's checkpoint.
+    # Pydantic already caps each inbound `ChatRequest.messages` at 20 and
+    # the 256-thread LRU evicts cold threads, so the practical attack
+    # surface is small. We log a warning when a thread crosses this cap
+    # so we know if it's actually a problem in prod (real fix = trim or
+    # summarise; out of scope for v1). Tunable via env for future use.
+    max_thread_history: int = Field(
+        default=50,
+        ge=10,
+        le=500,
+        validation_alias=AliasChoices("MAX_THREAD_HISTORY"),
+    )
+
     # ASGI-level request body cap (KB). Pydantic enforces per-field caps
     # AFTER the body is parsed; this rejects oversized bodies at the edge
     # so the server doesn't allocate megabytes for a request we'd reject

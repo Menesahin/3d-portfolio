@@ -12,6 +12,13 @@ Single-instance only — `InMemorySaver` lives in this process's memory,
 so running uvicorn with `--workers > 1` silos thread state per worker.
 Upgrade path: swap to `AsyncRedisSaver` from
 `langgraph-checkpoint-redis` inside `build_compiled_graph()`.
+
+Per-thread cap caveat: this LRU bounds the *number of threads* the saver
+holds, not the *messages per thread*. A single chatty visitor's
+checkpoint still grows unbounded. `chat.py` logs a `chat.thread_history_exceeded`
+warning when a thread crosses `Settings.max_thread_history` so we get
+prod signal; the real fix is `RemoveMessage` + `aupdate_state` (or a
+running summary), out of v1 scope.
 """
 from collections import deque
 from contextlib import suppress

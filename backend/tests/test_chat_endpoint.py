@@ -86,3 +86,47 @@ async def test_should_return_200_on_health() -> None:
         r = await ac.get("/health")
     assert r.status_code == 200
     assert r.json() == {"status": "ok"}
+
+
+class _ReadyStubGraph:
+    """Graph stub that mimics a fully-wired agent for the /ready happy path."""
+
+    checkpointer = object()  # truthy sentinel — readiness only checks `is not None`
+
+
+@pytest.mark.asyncio
+async def test_should_return_200_and_ready_shape_when_all_checks_pass() -> None:
+    from app.main import app
+
+    app.dependency_overrides[get_graph] = lambda: _ReadyStubGraph()
+
+    transport = ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+        r = await ac.get("/ready")
+
+    app.dependency_overrides.clear()
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "ready"
+    assert body["checks"] == {"graph": True, "checkpointer": True, "llm_key": True}
+
+
+@pytest.mark.asyncio
+async def test_should_return_503_when_checkpointer_missing() -> None:
+    from app.main import app
+
+    # StubGraph.checkpointer is None — readiness must flip to 503.
+    app.dependency_overrides[get_graph] = lambda: StubGraph()
+
+    transport = ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+        r = await ac.get("/ready")
+
+    app.dependency_overrides.clear()
+
+    assert r.status_code == 503
+    body = r.json()
+    assert body["status"] == "not_ready"
+    assert body["checks"]["checkpointer"] is False
+    assert body["checks"]["graph"] is True
