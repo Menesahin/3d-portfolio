@@ -15,9 +15,11 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.agent.graph import build_graph
 from app.api import chat, health
+from app.core.body_size import BodySizeLimitMiddleware
 from app.core.config import settings
 from app.core.logging import configure_logging, log
 from app.core.rate_limit import limiter, rate_limit_exceeded_handler
+from app.core.request_id import RequestIdMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
 
 
@@ -52,18 +54,28 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # typ
 #
 #   CORSMiddleware            (outermost — preflight 204s must escape
 #                              even if inner middleware throws)
+#   RequestIdMiddleware       (mints X-Request-Id; needs to wrap every
+#                              response, including TrustedHost 400s and
+#                              the SSE stream from /chat)
 #   SecurityHeadersMiddleware (stamps headers on every response, including
 #                              CORS preflights and TrustedHost 400s)
-#   TrustedHostMiddleware     (innermost gate — rejects bad Host headers
-#                              before any route handler runs)
+#   TrustedHostMiddleware     (gate — rejects bad Host headers before any
+#                              route handler runs)
+#   BodySizeLimitMiddleware   (rejects oversized bodies AFTER host check
+#                              passes, BEFORE the slowapi token is spent)
 #
-# Add order is therefore the reverse: TrustedHost first, then headers,
-# then CORS last.
+# Add order is therefore the reverse: BodySize first, then TrustedHost,
+# then headers, then RequestId, then CORS last.
+app.add_middleware(
+    BodySizeLimitMiddleware,
+    max_bytes=settings.max_request_body_kb * 1024,
+)
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=settings.trusted_hosts,
 )
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,

@@ -6,6 +6,7 @@ propagate so LangGraph can tear its task tree down when the browser leaves.
 """
 import asyncio
 import json
+import time
 import uuid
 from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING
@@ -61,7 +62,11 @@ async def chat(
     body: ChatRequest,
     graph: "Pregel" = Depends(get_graph),
 ) -> StreamingResponse:
-    request_id = uuid.uuid4().hex
+    # Prefer the id minted by `RequestIdMiddleware` so the SSE `ready`
+    # frame, the structlog binding, and the wire `X-Request-Id` header
+    # all match. Falls back to a fresh UUID for unit tests that exercise
+    # the route without the middleware chain.
+    request_id = getattr(request.state, "request_id", None) or uuid.uuid4().hex
     thread_id = body.thread_id or request_id
     # Bind request/thread ids into structlog's context so every log call
     # downstream — even from inside graph nodes / tool functions — picks
@@ -99,6 +104,13 @@ async def chat(
         # so the per-turn log reflects total cost. Stays at zeros for
         # providers/stubs that don't emit usage (e.g. test StubGraph).
         usage_totals = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
+        # SSE max-duration watchdog. We can't wrap an async generator in
+        # `asyncio.wait_for` cleanly, so we track wall-clock elapsed inside
+        # the loop and break out with a typed `error` SSE event when the
+        # cap is exceeded. This bounds total stream time even if OpenAI
+        # stalls mid-stream or LangGraph chases its tail in a tool loop.
+        deadline = time.monotonic() + settings.sse_max_duration_seconds
+        timed_out = False
 
         try:
             # First byte: request_id so the client can correlate with backend logs.
@@ -109,6 +121,9 @@ async def chat(
                 config=config,
                 stream_mode=["messages", "custom"],
             ):
+                if time.monotonic() >= deadline:
+                    timed_out = True
+                    break
                 # Note: in-stream `request.is_disconnected()` polling was
                 # removed — Starlette only flips that flag between chunks
                 # anyway, and a long LLM stall would block the poll for
@@ -153,6 +168,21 @@ async def chat(
                     elif kind and kind.startswith("content."):
                         last_content_event = payload
                     yield _sse("ui", {"event": payload})
+
+            if timed_out:
+                # Emit a typed error frame so the client UI can swap in a
+                # retry affordance. We deliberately skip the suggestions
+                # fallback + done frame: the stream is half-finished and
+                # any synthesised follow-up chips would be misleading.
+                log.warning(
+                    "chat.timeout",
+                    deadline_seconds=settings.sse_max_duration_seconds,
+                )
+                yield _sse(
+                    "error",
+                    ErrorEvent(message="agent timeout - please try again").model_dump(),
+                )
+                return
 
             # Safety net: small models sometimes forget to call the suggest
             # tool despite the persona shouting about it. Emit a context-

@@ -82,6 +82,29 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = Field(default=10, ge=1)
     rate_limit_per_hour: int = Field(default=60, ge=1)
 
+    # SSE max stream duration (seconds). Bounds total /chat stream wall time
+    # so a stalled OpenAI socket or runaway tool loop can't keep a connection
+    # open forever. 60s comfortably covers a 3-5 tool ReAct turn at gpt-4.1
+    # speeds; raise for slower models or larger recursion limits.
+    sse_max_duration_seconds: int = Field(
+        default=60,
+        ge=5,
+        le=600,
+        validation_alias=AliasChoices("SSE_MAX_DURATION_SECONDS", "CHAT_TIMEOUT_SECONDS"),
+    )
+
+    # ASGI-level request body cap (KB). Pydantic enforces per-field caps
+    # AFTER the body is parsed; this rejects oversized bodies at the edge
+    # so the server doesn't allocate megabytes for a request we'd reject
+    # anyway. A 20-message ChatRequest at 4000 chars/message tops out near
+    # 80KB but our typical body is <2KB; 32KB is the sweet spot.
+    max_request_body_kb: int = Field(
+        default=32,
+        ge=1,
+        le=1024,
+        validation_alias=AliasChoices("MAX_REQUEST_BODY_KB"),
+    )
+
     # v2 tracing toggles (§7.7) — wired but off by default.
     langfuse_public_key: str | None = None
     langfuse_secret_key: str | None = None
