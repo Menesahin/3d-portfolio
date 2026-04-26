@@ -17,19 +17,17 @@
  *   3. Inspect clip names with `npx gltfjsx public/models/xyz.glb --debug`.
  */
 
-export type AnimationMap = {
+import type { MascotGesture } from "@/types/tools";
+
+/**
+ * Maps a logical mascot signal (idle / walk / each `MascotGesture`)
+ * onto a clip name in the loaded GLB. Keying by `MascotGesture` instead
+ * of hand-typed strings means adding a new gesture in `types/tools.ts`
+ * forces the config to be revisited.
+ */
+export type AnimationMap = Partial<Record<MascotGesture, string>> & {
   idle: string;
   walk: string;
-  jump?: string;
-  wave?: string;
-  dance?: string;
-  thumbs_up?: string;
-  point?: string;
-  bow?: string;
-  head_tilt?: string;
-  shy?: string;
-  flip?: string;
-  spin_happy?: string;
 };
 
 export type MascotConfig = {
@@ -45,31 +43,32 @@ export type MascotConfig = {
 };
 
 /**
- * Active mascot: `robot_playground.glb` (Hadrien59 / Sketchfab CC-BY,
- * supplied by the user). 8.3 MB, 340 nodes, 68 meshes, single baked
- * "Experiment" animation — the whole diorama plays it on loop.
+ * RobotExpressive's clip names (per three.js repo):
+ *   Idle · Walking · Running · Dance · Death · Sitting · Standing · Jump
+ *   Wave · ThumbsUp · No · Yes · Punch
  *
- * All logical gesture slots map to the same clip. GlbMascot falls
- * back to the auto-clear timer when a gesture is fired — the robot
- * just continues its Experiment loop while the emote icon carries
- * the beat.
+ * Mappings lean on obvious names; richer gestures (flip, shy, spin_happy)
+ * are intentionally undefined so GlbMascot falls back to procedural cues.
  */
 export const mascotConfig: MascotConfig = {
-  id: "robot-playground",
-  assetUrl: "/models/robot-playground.glb",
-  scale: 0.35,
-  hoverOffset: 0.05,
+  id: "robot-expressive",
+  assetUrl: "/models/RobotExpressive.glb",
+  scale: 0.5,
+  hoverOffset: 0,
   gestureTimeScale: 1.0,
   animationMap: {
-    idle: "Experiment",
-    walk: "Experiment",
-    jump: "Experiment",
-    wave: "Experiment",
-    dance: "Experiment",
-    thumbs_up: "Experiment",
-    point: "Experiment",
-    bow: "Experiment",
-    head_tilt: "Experiment",
+    idle: "Idle",
+    walk: "Walking",
+    jump: "Jump",
+    wave: "Wave",
+    dance: "Dance",
+    thumbs_up: "ThumbsUp",
+    point: "Yes",
+    bow: "Sitting",
+    head_tilt: "No",
+    shy: "No",
+    flip: "WalkJump",
+    spin_happy: "Dance",
   },
-  emoteAnchor: [0, 2.2, 0],
+  emoteAnchor: [0, 2.4, 0],
 };

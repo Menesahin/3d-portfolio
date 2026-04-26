@@ -73,10 +73,7 @@ export function ProceduralMascot() {
 
   const bodyColor = "#E6E8EE";
   const accent = theme.palette.accent;
-  const target = useMemo(
-    () => expressionStyle(expression, accent, theme.id === "cyber"),
-    [expression, accent, theme.id],
-  );
+  const target = useMemo(() => expressionStyle(expression, accent, true), [expression, accent]);
   const targetVisor = useMemo(() => new THREE.Color(target.color), [target.color]);
 
   useFrame((state, dt) => {
@@ -158,7 +155,7 @@ export function ProceduralMascot() {
     }
   });
 
-  const eyeEmissive = theme.id === "cyber" ? 1.4 : 0.6;
+  const eyeEmissive = 1.4;
 
   return (
     <group ref={group} scale={0.9}>

@@ -1,67 +1,73 @@
-import { type ThreeEvent, useFrame } from "@react-three/fiber";
-import { Suspense, useRef } from "react";
-import * as THREE from "three";
+import type { ThreeEvent } from "@react-three/fiber";
+import { Suspense, useEffect, useRef } from "react";
+import type * as THREE from "three";
 import { useHover } from "@/hooks/useHover";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useStore } from "@/stores";
-import { ZONES } from "@/world/zones";
 import { Emote } from "./Emote";
 import { GlbMascot } from "./GlbMascot";
 import { mascotConfig } from "./MascotConfig";
 import { ProceduralMascot } from "./ProceduralMascot";
+import { useMascotLocomotion } from "./useMascotLocomotion";
+
+// Hover-driven gesture choreography. Click stays the big "hi" (wave +
+// sparkle); hover layers two smaller beats:
+//   1. Hover-enter, debounced 250 ms → nod (point → "Yes" clip)
+//   2. Sustained hover ~1.5 s     → thumbs-up
+// Cooldown gates the whole sequence so swiping the cursor across the
+// mascot doesn't spam animations.
+const HOVER_NOD_DELAY_MS = 250;
+const HOVER_THUMBS_DELAY_MS = 1500;
+const HOVER_COOLDOWN_MS = 4000;
 
 /**
  * The mascot: positions itself at the current zone (or lerps to target),
- * hovers gently, and hosts the floating emote. Rendering is delegated to
- * ProceduralMascot (default) or GlbMascot (when a .glb is configured).
+ * hovers gently, and hosts the floating emote. Locomotion (lerp +
+ * arrival + yaw + hover-scale + posRef publish) lives in a dedicated
+ * `useMascotLocomotion` hook so this component stays a coordinator
+ * (gesture choreography + click + delegating render).
  */
 export function Mascot() {
   const group = useRef<THREE.Group>(null);
-  const target = useRef(new THREE.Vector3());
   const reduceMotion = usePrefersReducedMotion();
-
-  const currentZone = useStore((s) => s.mascot.currentZone);
-  const targetZone = useStore((s) => s.mascot.targetZone);
-  const arriveAtZone = useStore((s) => s.arriveAtZone);
   const hover = useHover();
+  const lastHoverGestureAt = useRef(0);
+
+  useMascotLocomotion({ groupRef: group, hovered: hover.hovered });
 
   const handleMascotClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     const apply = useStore.getState().applyUiEvent;
     apply({ kind: "mascot.gesture", gesture: "wave" });
     apply({ kind: "mascot.emote", icon: "sparkle" });
+    // The wave consumes the cooldown so a hover-in right after won't
+    // also try to fire a nod.
+    lastHoverGestureAt.current = performance.now();
   };
 
-  useFrame((state, dt) => {
-    if (!group.current) return;
+  // Hover gestures — debounced so a quick mouseover doesn't trigger,
+  // and gated by a cooldown so we don't spam.
+  useEffect(() => {
+    if (!hover.hovered || reduceMotion) return;
+    const apply = useStore.getState().applyUiEvent;
+    const now = performance.now();
+    if (now - lastHoverGestureAt.current < HOVER_COOLDOWN_MS) return;
 
-    const desiredZoneId = targetZone ?? currentZone;
-    const [zx, zy, zz] = ZONES[desiredZoneId].position;
-    // Mascot stands on the island plus the hoverOffset + breath bob
-    const bob = Math.sin(state.clock.elapsedTime * 1.3) * 0.05;
-    target.current.set(zx, zy + mascotConfig.hoverOffset + bob, zz);
+    const nodId = window.setTimeout(() => {
+      apply({ kind: "mascot.gesture", gesture: "point" });
+      lastHoverGestureAt.current = performance.now();
+    }, HOVER_NOD_DELAY_MS);
 
-    const pos = group.current.position;
-    if (reduceMotion) {
-      pos.copy(target.current);
-    } else {
-      const k = 1 - Math.exp(-4 * dt);
-      pos.lerp(target.current, k);
-    }
+    const thumbsId = window.setTimeout(() => {
+      apply({ kind: "mascot.gesture", gesture: "thumbs_up" });
+      lastHoverGestureAt.current = performance.now();
+    }, HOVER_THUMBS_DELAY_MS);
 
-    // If we were moving and got close enough, settle
-    if (targetZone !== null) {
-      const [tx, _ty, tz] = ZONES[targetZone].position;
-      void _ty;
-      const dx = pos.x - tx;
-      const dz = pos.z - tz;
-      const distSq = dx * dx + dz * dz;
-      if (distSq < 0.04) arriveAtZone();
-    }
-
-    // Face forward (toward world center), subtle yaw
-    group.current.rotation.y = Math.atan2(-pos.x, -pos.z + 2);
-  });
+    return () => {
+      window.clearTimeout(nodId);
+      window.clearTimeout(thumbsId);
+    };
+  }, [hover.hovered, reduceMotion]);
 
   return (
     <group
