@@ -10,6 +10,42 @@
  */
 import type { UiEvent } from "@/types/tools";
 
+// Source-of-truth list of valid `kind` discriminators on UiEvent. Mirrors
+// `EXPECTED_UIEVENT_KINDS` in `backend/tests/test_tools.py` — both sides
+// fail loudly if either drifts.
+const UI_EVENT_KINDS = new Set<UiEvent["kind"]>([
+  "camera.focus",
+  "camera.zoom",
+  "mascot.move",
+  "mascot.orbit",
+  "mascot.dart",
+  "mascot.return_to_hub",
+  "mascot.gesture",
+  "mascot.point_at",
+  "mascot.emote",
+  "mascot.expression",
+  "world.reset",
+  "content.experience",
+  "content.project",
+  "content.skill_group",
+  "content.contact_card",
+  "chat.suggestions",
+]);
+
+function asUiEvent(payload: unknown): UiEvent | null {
+  if (!payload || typeof payload !== "object") return null;
+  const kind = (payload as { kind?: unknown }).kind;
+  if (typeof kind !== "string") return null;
+  if (!UI_EVENT_KINDS.has(kind as UiEvent["kind"])) {
+    if (import.meta.env.DEV) {
+      console.warn(`[stream] unknown UiEvent kind: ${kind}`);
+    }
+    return null;
+  }
+  // Discriminated-union narrowing happens at the dispatcher (`switch (event.kind)`).
+  return payload as UiEvent;
+}
+
 export type ServerEvent =
   | { type: "ready"; request_id: string }
   | { type: "token"; delta: string }
@@ -88,8 +124,10 @@ function parseFrame(frame: string): ServerEvent | null {
         return { type: "ready", request_id: String(data.request_id ?? "") };
       case "token":
         return { type: "token", delta: String(data.delta ?? "") };
-      case "ui":
-        return { type: "ui", event: data.event as UiEvent };
+      case "ui": {
+        const event = asUiEvent(data.event);
+        return event ? { type: "ui", event } : null;
+      }
       case "done":
         return { type: "done", request_id: data.request_id };
       case "error":

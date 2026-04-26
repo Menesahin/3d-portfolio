@@ -2,8 +2,15 @@ import { useState } from "react";
 import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/stores";
-import type { CameraTarget, EmoteIcon, MascotGesture } from "@/types/tools";
-import { ZONE_IDS, type ZoneId } from "@/world/zones";
+import type {
+  CameraTarget,
+  CompanyId,
+  EmoteIcon,
+  MascotGesture,
+  ProjectId,
+  SkillGroup,
+} from "@/types/tools";
+import { ZONE_IDS } from "@/world/zones";
 
 /**
  * Dev-only panel for driving the world manually before the AI is wired up.
@@ -34,14 +41,9 @@ const GESTURES: MascotGesture[] = [
   "shy",
 ];
 
-const HOLOGRAM_CONTENT_MAP: Record<ZoneId, string | null> = {
-  hub: null,
-  experience: "formica",
-  projects: "vocabuddy",
-  skills: null,
-  gallery: null,
-  contact: null,
-};
+const COMPANIES: CompanyId[] = ["nar-sistem", "formica", "ing-bank"];
+const PROJECT_IDS: ProjectId[] = ["vocabuddy", "shotmock", "claude-voice", "thecupxi"];
+const SKILL_GROUPS: SkillGroup[] = ["ai", "backend", "frontend", "devops"];
 
 export function DebugPanel() {
   const t = useT();
@@ -51,24 +53,22 @@ export function DebugPanel() {
   const moveMascotTo = useStore((s) => s.moveMascotTo);
   const setEmote = useStore((s) => s.setEmote);
   const setGesture = useStore((s) => s.setGesture);
-  const highlightZone = useStore((s) => s.highlightZone);
-  const showHologram = useStore((s) => s.showHologram);
-  const hideHologram = useStore((s) => s.hideHologram);
-  const activateTerminal = useStore((s) => s.activateTerminal);
+  const showContent = useStore((s) => s.showContent);
+  const hideContent = useStore((s) => s.hideContent);
   const resetWorld = useStore((s) => s.resetWorld);
 
   const targets: CameraTarget[] = ["overview", ...ZONE_IDS];
 
   return (
-    <div className="pointer-events-auto fixed right-3 top-16 z-30 w-72 rounded-xl border border-[var(--color-fg)]/10 bg-[var(--color-bg)]/90 p-3 shadow-2xl backdrop-blur-xl">
+    <div className="holo-surface pointer-events-auto fixed right-3 top-16 z-30 w-72 rounded-xl p-3 shadow-[0_0_28px_-10px_var(--color-accent)]">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-fg)]/70">
+        <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
           {t.debug.label}
         </h2>
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
-          className="text-xs text-[var(--color-fg)]/50 hover:text-[var(--color-fg)]"
+          className="text-[11px] text-[var(--color-accent)]/60 hover:text-[var(--color-accent)]"
         >
           {collapsed ? "▸" : "▾"}
         </button>
@@ -108,37 +108,30 @@ export function DebugPanel() {
             ))}
           </Section>
 
-          <Section title={t.debug.highlight}>
-            {ZONE_IDS.map((z) => (
-              <Chip key={z} onClick={() => highlightZone(z)}>
-                {z}
+          <Section title={t.debug.hologram}>
+            {COMPANIES.map((c) => (
+              <Chip key={c} onClick={() => showContent({ kind: "experience", company: c })}>
+                exp:{c}
               </Chip>
             ))}
-            <Chip onClick={() => highlightZone(null)}>off</Chip>
-          </Section>
-
-          <Section title={t.debug.hologram}>
-            {ZONE_IDS.map((z) => {
-              const contentId = HOLOGRAM_CONTENT_MAP[z];
-              if (!contentId) return null;
-              return (
-                <Chip key={z} onClick={() => showHologram(z, contentId)}>
-                  {z}:{contentId}
-                </Chip>
-              );
-            })}
-            <Chip onClick={hideHologram}>off</Chip>
-          </Section>
-
-          <Section title="terminal">
-            <Chip onClick={() => activateTerminal(true)}>on</Chip>
-            <Chip onClick={() => activateTerminal(false)}>off</Chip>
+            {PROJECT_IDS.map((p) => (
+              <Chip key={p} onClick={() => showContent({ kind: "project", project: p })}>
+                proj:{p}
+              </Chip>
+            ))}
+            {SKILL_GROUPS.map((g) => (
+              <Chip key={g} onClick={() => showContent({ kind: "skill_group", group: g })}>
+                skill:{g}
+              </Chip>
+            ))}
+            <Chip onClick={() => showContent({ kind: "contact_card" })}>contact</Chip>
+            <Chip onClick={hideContent}>off</Chip>
           </Section>
 
           <button
             type="button"
             onClick={() => resetWorld()}
-            className="mt-1 rounded-md bg-[var(--color-fg)]/10 py-1.5 text-[11px] font-medium text-[var(--color-fg)] hover:bg-[var(--color-fg)]/20"
+            className="mt-1 rounded-md border border-[var(--color-accent)]/30 py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--color-accent)] transition hover:bg-[var(--color-accent)]/15"
           >
             {t.debug.reset}
           </button>
@@ -151,7 +144,7 @@ export function DebugPanel() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-fg)]/50">
+      <p className="mb-1 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--color-accent)]/60">
         {title}
       </p>
       <div className="flex flex-wrap gap-1">{children}</div>
@@ -173,7 +166,7 @@ function Chip({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full bg-[var(--color-fg)]/10 px-2 py-0.5 text-[10px] text-[var(--color-fg)] transition hover:bg-[var(--color-fg)]/20",
+        "rounded-md border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/8 px-2 py-0.5 font-mono text-[10px] text-[var(--color-fg)] transition hover:border-[var(--color-accent)]/60 hover:bg-[var(--color-accent)]/20",
         className,
       )}
     >

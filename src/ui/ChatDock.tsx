@@ -1,47 +1,74 @@
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { streamChat } from "@/chat/stream";
+import { findLastAssistant } from "@/chat/lastAssistant";
+import { useChatStream } from "@/chat/useChatStream";
+import { onboarding } from "@/content/onboarding";
+import { useFirstVisit } from "@/hooks/useFirstVisit";
 import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/stores";
 
 /**
- * Live chat dock. The chat slice stores the transcript; the world slice
- * receives UI tool events via `applyUiEvent`. Streaming uses the SSE
- * client in `src/chat/stream.ts`.
+ * Twitch-style floating chat overlay — no containing plate. Messages
+ * stack up from the bottom, the top of the feed fades into the scene
+ * via a gradient mask. The only always-on chrome is a slim translucent
+ * input bar at the bottom-right; the feed appears when messages arrive.
+ *
+ * SSE orchestration lives in `useChatStream`; this file is the UI +
+ * key handlers + first-visit greeting seed.
  *
  * Keyboard:
  *   "/"  — focus the input from anywhere (except when already typing)
- *   Esc  — collapse dock / abort in-flight stream
+ *   Esc  — blur / abort in-flight stream
  *   Enter — submit
  */
 export function ChatDock() {
   const t = useT();
-  const isOpen = useStore((s) => s.chat.isOpen);
-  const isStreaming = useStore((s) => s.chat.isStreaming);
+  const lang = useStore((s) => s.lang);
   const messages = useStore((s) => s.chat.messages);
-  const toggle = useStore((s) => s.toggleChat);
-  const openChat = useStore((s) => s.openChat);
-  const closeChat = useStore((s) => s.closeChat);
+  const suggestions = useStore((s) => s.chat.suggestions);
   const appendMessage = useStore((s) => s.appendMessage);
-  const appendDelta = useStore((s) => s.appendDelta);
+  const setSuggestions = useStore((s) => s.setSuggestions);
+  const clearSuggestions = useStore((s) => s.clearSuggestions);
   const finishStreaming = useStore((s) => s.finishStreaming);
-  const setStreaming = useStore((s) => s.setStreaming);
-  const applyUiEvent = useStore((s) => s.applyUiEvent);
+  const { isFirstVisit } = useFirstVisit();
+  const { send, stop, isStreaming } = useChatStream();
 
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
+  // Guard against React strict-mode double-mount + HMR re-runs. Once we've
+  // seeded the greeting in this session we never do it again.
+  const seededRef = useRef(false);
 
-  // Auto-scroll to bottom as new content arrives.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll intent is tied to count, not identity
+  // First-visit: seed a canned greeting + starter chips so the dock
+  // doesn't greet the user with an empty box. Only fires once per
+  // device (gated by localStorage in useFirstVisit).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: lang re-seeds if user swaps before typing
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages.length]);
+    if (!isFirstVisit) return;
+    if (seededRef.current) return;
+    if (messages.length > 0) return;
+    if (useStore.getState().chat.messages.some((m) => m.id === "onboard-greeting")) {
+      seededRef.current = true;
+      return;
+    }
+    seededRef.current = true;
+    const copy = onboarding[lang];
+    appendMessage({ id: "onboard-greeting", role: "assistant", content: copy.greeting });
+    setSuggestions(copy.starter);
+  }, [isFirstVisit, lang]);
 
-  // Global "/" shortcut to focus the chat input.
+  // Re-pins the feed to the bottom whenever messages arrive OR the last
+  // message's content grows (token streams). `scrollTop =` over smooth
+  // behaviour so we don't fight the animation on every token tick.
+  const lastLen = messages[messages.length - 1]?.content.length ?? 0;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll tied to count + last length
+  useEffect(() => {
+    const el = feedRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages.length, lastLen, isStreaming]);
+
   useEffect(() => {
     function onKey(e: globalThis.KeyboardEvent) {
       const target = e.target as HTMLElement | null;
@@ -50,193 +77,150 @@ export function ChatDock() {
         (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
       if (e.key === "/" && !isTyping) {
         e.preventDefault();
-        openChat();
         requestAnimationFrame(() => inputRef.current?.focus());
       }
       if (e.key === "Escape") {
         if (isStreaming) {
-          closeChat();
-        } else if (isOpen) {
-          toggle();
+          useStore.getState().chat.abortController?.abort();
+          finishStreaming();
+        } else {
+          inputRef.current?.blur();
         }
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openChat, closeChat, toggle, isOpen, isStreaming]);
-
-  const send = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed || isStreaming) return;
-
-      const userId = `u-${crypto.randomUUID()}`;
-      const assistantId = `a-${crypto.randomUUID()}`;
-      appendMessage({ id: userId, role: "user", content: trimmed });
-      appendMessage({ id: assistantId, role: "assistant", content: "", streaming: true });
-      setDraft("");
-
-      const ac = new AbortController();
-      setStreaming(true, ac);
-
-      try {
-        // Send ONLY the latest user turn + a stable thread_id. The backend's
-        // LangGraph checkpointer replays full state (including the tool
-        // calls it fired on prior turns), so the LLM keeps invoking fresh
-        // tools instead of skipping to a text-only reply.
-        const threadId = useStore.getState().chat.threadId;
-        const body = {
-          thread_id: threadId,
-          messages: [{ role: "user" as const, content: trimmed }],
-        };
-        for await (const ev of streamChat(body, ac.signal)) {
-          if (ev.type === "token") {
-            appendDelta(ev.delta);
-          } else if (ev.type === "ui") {
-            applyUiEvent(ev.event);
-          } else if (ev.type === "error") {
-            appendDelta(`\n\n⚠️ ${ev.message}`);
-          }
-        }
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          appendDelta(`\n\n⚠️ ${(err as Error).message}`);
-        }
-      } finally {
-        finishStreaming();
-      }
-    },
-    [appendDelta, appendMessage, applyUiEvent, finishStreaming, isStreaming, setStreaming],
-  );
-
-  const stop = useCallback(() => {
-    useStore.getState().chat.abortController?.abort();
-    finishStreaming();
-  }, [finishStreaming]);
+  }, [isStreaming, finishStreaming]);
 
   const onInputKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         void send(draft);
+        setDraft("");
       }
     },
     [draft, send],
   );
 
-  const lastAssistant = useMemo(
-    () => [...messages].reverse().find((m) => m.role === "assistant"),
-    [messages],
-  );
+  const lastAssistant = useMemo(() => findLastAssistant(messages), [messages]);
 
   return (
-    <div className="pointer-events-none fixed bottom-5 left-5 right-5 z-20 sm:right-auto">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex flex-col items-end">
+      {/* --- Message feed: stacks up from bottom, fades into scene at top --- */}
       <div
-        className={cn(
-          "pointer-events-auto flex w-full flex-col overflow-hidden rounded-2xl border border-[var(--color-fg)]/10 bg-[var(--color-bg)]/90 shadow-xl backdrop-blur-xl transition-all duration-300 sm:w-[min(420px,92vw)]",
-          isOpen ? "h-[min(460px,60vh)]" : "h-[54px]",
-        )}
+        ref={feedRef}
+        aria-live="polite"
+        aria-atomic="false"
+        className="chat-feed pointer-events-auto flex max-h-[46vh] w-full max-w-[440px] flex-col gap-1.5 overflow-y-auto px-5 pb-2 pt-10"
       >
-        <button
-          type="button"
-          onClick={toggle}
-          aria-expanded={isOpen}
-          aria-label={isOpen ? "Collapse chat" : "Open chat"}
-          className="flex shrink-0 items-center justify-between px-4 py-3 text-left text-sm font-medium text-[var(--color-fg)]"
-        >
-          <span className="flex min-w-0 items-center gap-2">
-            <span
-              aria-hidden
-              className={cn(
-                "inline-block h-2 w-2 shrink-0 rounded-full",
-                isStreaming ? "animate-pulse bg-[var(--color-accent)]" : "bg-[var(--color-accent)]",
-              )}
-            />
-            <span className="truncate">{t.hero.greeting}</span>
-          </span>
-          <span className="ml-3 shrink-0 text-xs text-[var(--color-fg)]/50">
-            {isOpen ? "▼" : "▲"}
-          </span>
-        </button>
+        {messages.map((m) => (
+          <Line
+            key={m.id}
+            role={m.role}
+            content={m.content + (m.streaming && m === lastAssistant ? "▍" : "")}
+          />
+        ))}
 
-        {isOpen && (
-          <>
-            <div
-              ref={scrollRef}
-              aria-live="polite"
-              aria-atomic="false"
-              className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-2 text-sm"
-            >
-              {messages.length === 0 && (
-                <p className="text-[var(--color-fg)]/50">
-                  {t.chat.placeholder} (press{" "}
-                  <kbd className="rounded bg-[var(--color-fg)]/10 px-1">/</kbd>)
-                </p>
-              )}
-              {messages.map((m) => (
-                <Bubble
-                  key={m.id}
-                  role={m.role}
-                  content={m.content + (m.streaming && m === lastAssistant ? "▍" : "")}
-                />
-              ))}
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void send(draft);
-              }}
-              className="flex shrink-0 items-center gap-2 border-t border-[var(--color-fg)]/5 px-3 py-3"
-            >
-              <input
-                ref={inputRef}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={onInputKeyDown}
-                placeholder={t.chat.placeholder}
-                aria-label={t.chat.placeholder}
-                className="flex-1 rounded-full border border-[var(--color-fg)]/15 bg-[var(--color-bg)]/70 px-4 py-2 text-sm outline-none focus:border-[var(--color-accent)]/60"
-              />
-              {isStreaming ? (
-                <button
-                  type="button"
-                  onClick={stop}
-                  className="rounded-full bg-[var(--color-fg)]/10 px-4 py-2 text-sm font-medium text-[var(--color-fg)] hover:bg-[var(--color-fg)]/20"
-                >
-                  {t.chat.stop}
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={!draft.trim()}
-                  className="rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {t.chat.send}
-                </button>
-              )}
-            </form>
-          </>
+        {/* Follow-up chips — shown only when the agent left any and the
+            stream has completed for the current turn. */}
+        {suggestions.length > 0 && !isStreaming && (
+          <div className="chat-line flex flex-wrap justify-end gap-1.5 pt-1">
+            {suggestions.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  clearSuggestions();
+                  void send(s.prompt);
+                }}
+                className="pointer-events-auto rounded-full border border-[var(--color-accent)]/50 bg-[var(--color-accent)]/12 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-[var(--color-accent)] shadow-[0_0_10px_-4px_var(--color-accent)] transition hover:bg-[var(--color-accent)]/25"
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         )}
       </div>
+
+      {/* --- Slim input bar at bottom-right ---------------------------- */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void send(draft);
+          setDraft("");
+        }}
+        className="pointer-events-auto mb-5 mr-5 flex w-[min(440px,92vw)] items-center gap-2 rounded-full border border-[var(--holo-edge)] bg-black/45 px-4 py-2 text-[13px] backdrop-blur-md transition focus-within:border-[var(--color-accent)] focus-within:shadow-[0_0_18px_-6px_var(--color-accent)]"
+      >
+        <span
+          aria-hidden
+          className={cn(
+            "inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)] shadow-[0_0_6px_var(--color-accent)]",
+            isStreaming && "animate-pulse",
+          )}
+        />
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={onInputKeyDown}
+          placeholder={`${t.chat.placeholder}   /`}
+          aria-label={t.chat.placeholder}
+          className="flex-1 bg-transparent font-mono text-[13px] text-white outline-none placeholder:text-white/35"
+        />
+        {isStreaming ? (
+          <button
+            type="button"
+            onClick={stop}
+            className="rounded-full border border-[var(--color-accent)]/40 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[var(--color-accent)] transition hover:bg-[var(--color-accent)]/20"
+          >
+            {t.chat.stop}
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={!draft.trim()}
+            className="rounded-full border border-[var(--color-accent)]/50 bg-[var(--color-accent)]/15 px-3 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[var(--color-accent)] transition hover:bg-[var(--color-accent)]/30 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t.chat.send}
+          </button>
+        )}
+      </form>
     </div>
   );
 }
 
-function Bubble({ role, content }: { role: "user" | "assistant" | "system"; content: string }) {
+/**
+ * Single chat line — Twitch-style: no bubble, no container, just a
+ * coloured role tag + message body with a strong text-shadow so the
+ * message stays legible over bright or dark scene backgrounds.
+ */
+function Line({ role, content }: { role: "user" | "assistant" | "system"; content: string }) {
   const isUser = role === "user";
+  const tag = isUser ? "you" : "companion";
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
+    <div
+      className={cn(
+        "chat-line w-full max-w-full whitespace-pre-wrap break-words text-right",
+        "[text-shadow:0_1px_6px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]",
+      )}
+    >
+      <span
         className={cn(
-          "max-w-[82%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm leading-relaxed",
-          isUser
-            ? "bg-[var(--color-accent)] text-white"
-            : "bg-[var(--color-fg)]/8 text-[var(--color-fg)]",
+          "mr-1.5 font-mono text-[10px] uppercase tracking-widest",
+          isUser ? "text-[var(--color-accent)]" : "text-[var(--color-accent)]/70",
+        )}
+      >
+        {tag} ›
+      </span>
+      <span
+        className={cn(
+          "text-[13px] leading-relaxed",
+          isUser ? "font-mono text-[var(--color-accent)]" : "text-white/95",
         )}
       >
         {content || (role === "assistant" ? "…" : "")}
-      </div>
+      </span>
     </div>
   );
 }

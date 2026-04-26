@@ -26,11 +26,6 @@ export const tr: Dict = {
     gallery: "Galeri",
     contact: "İletişim",
   },
-  theme: {
-    label: "Tema",
-    dreamy: "Rüyamsı",
-    cyber: "Siber",
-  },
   lang: {
     label: "Dil",
     en: "English",

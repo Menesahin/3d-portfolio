@@ -30,18 +30,18 @@ export function EventTicker() {
 
   if (events.length === 0) {
     return (
-      <div className="pointer-events-none fixed right-4 bottom-4 z-30 rounded-full bg-[var(--color-bg)]/85 px-3 py-1.5 font-mono text-[11px] text-[var(--color-fg)]/60 shadow-md backdrop-blur-md">
-        (no ui events yet — send a prompt)
+      <div className="holo-chip pointer-events-none fixed bottom-4 left-4 z-30 rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--color-fg)]/55">
+        (no ui events — send a prompt)
       </div>
     );
   }
 
   return (
-    <div className="pointer-events-none fixed right-4 bottom-4 z-30 flex max-w-[360px] flex-col gap-1 font-mono text-[11px]">
+    <div className="pointer-events-none fixed bottom-4 left-4 z-30 flex max-w-[340px] flex-col gap-1 font-mono text-[10px]">
       {events.map(({ t, ev }) => (
         <div
           key={`${t}-${ev.kind}`}
-          className="rounded-md bg-[var(--color-bg)]/85 px-2 py-1 text-[var(--color-fg)]/80 shadow-sm backdrop-blur-md"
+          className="holo-chip rounded-md px-2 py-1 text-[var(--color-fg)]/80"
         >
           <span className="text-[var(--color-accent)]">{ev.kind}</span>{" "}
           <span className="text-[var(--color-fg)]/55">{summarise(ev)}</span>

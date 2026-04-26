@@ -11,7 +11,7 @@ export function LangSelector() {
     <div
       role="group"
       aria-label={t.lang.label}
-      className="flex items-center gap-0.5 rounded-full border border-[var(--color-fg)]/10 bg-[var(--color-bg)]/80 p-1 text-xs backdrop-blur-md shadow-sm"
+      className="holo-chip flex items-center gap-0.5 rounded-full p-1 text-[11px] font-mono"
     >
       {(["en", "tr"] as const).map((code) => (
         <button
@@ -20,13 +20,13 @@ export function LangSelector() {
           onClick={() => setLang(code)}
           aria-pressed={lang === code}
           className={cn(
-            "rounded-full px-3 py-1 font-medium transition",
+            "rounded-full px-2.5 py-0.5 uppercase tracking-wider transition",
             lang === code
-              ? "bg-[var(--color-fg)] text-[var(--color-bg)]"
-              : "text-[var(--color-fg)]/60 hover:text-[var(--color-fg)]",
+              ? "bg-[var(--color-accent)]/25 text-[var(--color-accent)]"
+              : "text-[var(--color-fg)]/55 hover:text-[var(--color-fg)]",
           )}
         >
-          {code.toUpperCase()}
+          {code}
         </button>
       ))}
     </div>

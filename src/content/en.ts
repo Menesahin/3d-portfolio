@@ -24,11 +24,6 @@ export const en = {
     gallery: "Gallery",
     contact: "Contact",
   },
-  theme: {
-    label: "Theme",
-    dreamy: "Dreamy",
-    cyber: "Cyber",
-  },
   lang: {
     label: "Language",
     en: "English",
