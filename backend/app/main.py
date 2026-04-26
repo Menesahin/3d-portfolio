@@ -10,11 +10,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
 
 from app.agent.graph import build_graph
 from app.api import chat, health
 from app.core.config import settings
 from app.core.logging import configure_logging, log
+from app.core.rate_limit import limiter, rate_limit_exceeded_handler
 
 
 @asynccontextmanager
@@ -37,6 +39,11 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# slowapi reads the limiter off `app.state.limiter` inside its decorator;
+# the exception handler turns RateLimitExceeded into our JSON contract.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 app.add_middleware(
     CORSMiddleware,

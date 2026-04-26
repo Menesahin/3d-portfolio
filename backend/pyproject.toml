@@ -18,6 +18,9 @@ dependencies = [
   "langchain-core>=0.3,<2",
   "langchain-openai>=0.2,<2",
   "openai>=1.54",
+  # Per-IP rate limiting on /chat. In-memory store is fine for single-worker
+  # uvicorn; swap the storage URI to Redis if we ever scale horizontally.
+  "slowapi>=0.1.9,<1",
   # Tracing tools — both deferred to v2 (see plan §7.7). Uncomment one when ready.
   # "langfuse>=2.50",
   # "langsmith>=0.1.140",

@@ -19,6 +19,7 @@ from app.agent.events import ChatRequest, ChatSuggestions, DoneEvent, ErrorEvent
 from app.agent.fallback_suggestions import derive as derive_fallback_suggestions
 from app.agent.memory import register_thread
 from app.core.logging import log
+from app.core.rate_limit import CHAT_LIMITS, limiter
 from app.deps import get_graph
 
 if TYPE_CHECKING:
@@ -53,9 +54,10 @@ def _to_lc_messages(req: ChatRequest) -> list:
 
 
 @router.post("/chat")
+@limiter.limit(";".join(CHAT_LIMITS))
 async def chat(
-    body: ChatRequest,
     request: Request,
+    body: ChatRequest,
     graph: "Pregel" = Depends(get_graph),
 ) -> StreamingResponse:
     request_id = uuid.uuid4().hex

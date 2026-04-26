@@ -49,6 +49,12 @@ class Settings(BaseSettings):
 
     log_level: str = "INFO"
 
+    # Per-IP rate limiting on /chat. Defaults are operator-tunable via env.
+    # Single-worker uvicorn → in-memory store; documented in rate_limit.py.
+    rate_limit_enabled: bool = True
+    rate_limit_per_minute: int = Field(default=10, ge=1)
+    rate_limit_per_hour: int = Field(default=60, ge=1)
+
     # v2 tracing toggles (§7.7) — wired but off by default.
     langfuse_public_key: str | None = None
     langfuse_secret_key: str | None = None
