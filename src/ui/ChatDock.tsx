@@ -30,6 +30,7 @@ export function ChatDock() {
   const setSuggestions = useStore((s) => s.setSuggestions);
   const clearSuggestions = useStore((s) => s.clearSuggestions);
   const finishStreaming = useStore((s) => s.finishStreaming);
+  const activeContent = useStore((s) => s.world.activeContent);
   const { isFirstVisit } = useFirstVisit();
   const { send, stop, isStreaming } = useChatStream();
 
@@ -104,44 +105,47 @@ export function ChatDock() {
   );
 
   const lastAssistant = useMemo(() => findLastAssistant(messages), [messages]);
+  const isPresenting = activeContent !== null;
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex flex-col items-end">
       {/* --- Message feed: stacks up from bottom, fades into scene at top --- */}
-      <div
-        ref={feedRef}
-        aria-live="polite"
-        aria-atomic="false"
-        className="chat-feed pointer-events-auto flex max-h-[46vh] w-full max-w-[440px] flex-col gap-1.5 overflow-y-auto px-5 pb-2 pt-10"
-      >
-        {messages.map((m) => (
-          <Line
-            key={m.id}
-            role={m.role}
-            content={m.content + (m.streaming && m === lastAssistant ? "▍" : "")}
-          />
-        ))}
+      {!isPresenting && (
+        <div
+          ref={feedRef}
+          aria-live="polite"
+          aria-atomic="false"
+          className="chat-feed pointer-events-auto flex max-h-[46vh] w-full max-w-[440px] flex-col gap-1.5 overflow-y-auto px-5 pb-2 pt-10"
+        >
+          {messages.map((m) => (
+            <Line
+              key={m.id}
+              role={m.role}
+              content={m.content + (m.streaming && m === lastAssistant ? "▍" : "")}
+            />
+          ))}
 
-        {/* Follow-up chips — shown only when the agent left any and the
-            stream has completed for the current turn. */}
-        {suggestions.length > 0 && !isStreaming && (
-          <div className="chat-line flex flex-wrap justify-end gap-1.5 pt-1">
-            {suggestions.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => {
-                  clearSuggestions();
-                  void send(s.prompt);
-                }}
-                className="pointer-events-auto rounded-full border border-[var(--color-accent)]/50 bg-[var(--color-accent)]/12 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-[var(--color-accent)] shadow-[0_0_10px_-4px_var(--color-accent)] transition hover:bg-[var(--color-accent)]/25"
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+          {/* Follow-up chips — shown only when the agent left any and the
+              stream has completed for the current turn. */}
+          {suggestions.length > 0 && !isStreaming && (
+            <div className="chat-line flex flex-wrap justify-end gap-1.5 pt-1">
+              {suggestions.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    clearSuggestions();
+                    void send(s.prompt);
+                  }}
+                  className="pointer-events-auto rounded-full border border-[var(--color-accent)]/50 bg-[var(--color-accent)]/12 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-[var(--color-accent)] shadow-[0_0_10px_-4px_var(--color-accent)] transition hover:bg-[var(--color-accent)]/25"
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* --- Slim input bar at bottom-right ---------------------------- */}
       <form

@@ -19,9 +19,9 @@ import type { ZoneId } from "./zones";
  * tool fire that opens a hologram also reframes the camera; an explicit
  * setCameraTarget (e.g. "overview") wins until activeContent changes.
  *
- * On mobile we widen the camera FOV (45° → 55°) so the narrower portrait
- * aspect ratio still fits the full back-wall arc + side walls in frame.
- * No new framings to maintain — same SHOTS table, just a wider lens.
+ * Mobile uses its own portrait shot table plus a wider lens (45° → 65°),
+ * keeping destination panels centred without exposing the desktop ceiling
+ * assembly or relying on a single distance multiplier for every wall.
  */
 type Offset = { pos: [number, number, number]; target: [number, number, number] };
 
@@ -44,25 +44,30 @@ const SHOTS: Record<ZoneId | "overview" | "hub", Offset> = {
   contact: { pos: [-1.2, 3.2, 7.5], target: [1.0, 1.6, 1.5] },
 };
 
+// Portrait shots are authored independently instead of multiplying every
+// desktop camera distance by one global value. Destination cameras sit lower
+// and aim at the exhibit centre; Projects is pulled far enough back for all
+// four cards to fit within the phone's narrow horizontal field of view.
+const MOBILE_SHOTS: Record<ZoneId | "overview" | "hub", Offset> = {
+  hub: { pos: [0, 5.7, 13.3], target: [0, 1.8, 0] },
+  overview: { pos: [0, 7.6, 16.1], target: [0, 2.0, 0] },
+  gallery: { pos: [0, 3.9, 9.3], target: [0, 4.3, -9] },
+  projects: { pos: [0, 3.9, 9.3], target: [0, 4.3, -9] },
+  experience: { pos: [8.6, 3.9, 0], target: [-9, 4.3, 0] },
+  skills: { pos: [-8.6, 3.9, 0], target: [9, 4.3, 0] },
+  contact: { pos: [-2.1, 3.8, 9.9], target: [1.0, 1.6, 1.5] },
+};
+
 const ZOOM_FACTORS = {
   close: 0.85,
   medium: 1.0,
   wide: 1.2,
 } as const;
 
-// Mobile-only camera-distance multiplier — pulls every shot 40 % farther
-// from its look-target. Combined with the 65° FOV bump this gives a
-// roomy frame (~9–10u wide on iPhone-portrait) so the 4-card project
-// arc fits comfortably with margin. Mascot reads smaller but stays in
-// composition; the alternative (cropping edge content) is worse.
-const MOBILE_DIST_MULT = 1.4;
-
 const FOV_DESKTOP = 45;
-// 65° vertical FOV — at iPhone-portrait aspect (~0.46) this gives
-// ≈27° horizontal half-FOV → ~7u frame width at distance 12u, enough
-// to fit the back-wall projects arc (4 cards spanning ~6.2u) with a
-// small margin on either side. 55° wasn't enough; the edge cards
-// (vocabuddy, thecupxi) clipped.
+// 65° vertical FOV gives roughly 33° horizontal FOV at iPhone portrait
+// aspect. Combined with the 18.3u Projects shot, that fits the ~10.5u
+// four-card wall; 55° clipped Vocabuddy and The Cup XI at the edges.
 const FOV_MOBILE = 65;
 
 export function CameraRig() {
@@ -106,8 +111,9 @@ export function CameraRig() {
     const cc = controlsRef.current;
     if (!cc) return;
 
-    const shot = SHOTS[target] ?? SHOTS.hub;
-    const factor = ZOOM_FACTORS[zoom] * (isMobile ? MOBILE_DIST_MULT : 1);
+    const shots = isMobile ? MOBILE_SHOTS : SHOTS;
+    const shot = shots[target] ?? shots.hub;
+    const factor = ZOOM_FACTORS[zoom];
 
     // Zoom factor scales the camera-to-target distance, not the absolute
     // position. Compute in target-relative space, then re-anchor.

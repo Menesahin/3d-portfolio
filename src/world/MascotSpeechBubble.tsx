@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type * as THREE from "three";
 import { findLastAssistant } from "@/chat/lastAssistant";
 import { useActiveTheme } from "@/hooks/useActiveTheme";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { mascotPosRef } from "@/mascot/mascotPosRef";
 import { useStore } from "@/stores";
 import { HoloChrome } from "./holograms/HoloChrome";
@@ -17,16 +18,12 @@ const MAX_CHARS = 280;
 const CURSOR = "▍";
 
 /**
- * Speech bubble above the mascot — mirrors whatever the latest assistant
- * message currently is. Updates token-by-token while the stream is in
- * flight, fades out when there's nothing to say.
+ * Desktop live-speech cue above the mascot. Mirrors the streaming tail of
+ * the latest assistant message, then fades as soon as streaming completes.
  *
- * Deliberately separate from `HologramStage`: the hologram panels are
- * content cards (experience / project / skills / contact) that show
- * when the agent fires a `content.*` tool. The speech bubble shows the
- * agent's *prose reply*, which is orthogonal and often runs alongside a
- * hologram. Keeps "what the robot said" and "what it pulled up" as two
- * separate surfaces.
+ * The HTML ChatDock owns the persistent transcript. Mobile and active
+ * hologram presentations suppress this panel so prose never duplicates or
+ * covers the exhibit.
  *
  * Material plumbing reuses `useHoloFade` so the bubble reads as the
  * same visual family as the wall holograms (frame flicker + selective
@@ -34,6 +31,7 @@ const CURSOR = "▍";
  */
 export function MascotSpeechBubble() {
   const theme = useActiveTheme();
+  const isMobile = useIsMobile();
   const messages = useStore((s) => s.chat.messages);
   const isStreaming = useStore((s) => s.chat.isStreaming);
   const activeContent = useStore((s) => s.world.activeContent);
@@ -47,10 +45,10 @@ export function MascotSpeechBubble() {
   const isStreamingThis = isStreaming && lastAssistant?.streaming === true;
   const content = display + (isStreamingThis ? CURSOR : "");
 
-  // Hide the bubble whenever a hologram is up — the hologram panel
-  // already carries the visual, no need to duplicate the prose on top
-  // of it. Re-appears as soon as the user dismisses / switches away.
-  const visible = raw.length > 0 && !activeContent;
+  // The HTML dock owns persistent transcript history. The in-world bubble
+  // is a desktop-only live-speaking cue, so it disappears when streaming
+  // ends and never competes with mobile or active exhibit framing.
+  const visible = raw.length > 0 && isStreamingThis && !activeContent && !isMobile;
 
   const accent = theme.palette.accent;
   const { rootRef, plateMat, haloMat, frameMat } = useHoloFade(visible ? 1 : 0, accent, 1.0);

@@ -7,8 +7,8 @@ import { useStore } from "@/stores";
 
 /**
  * First-visit 3D hint text anchored above the mascot. Fades out after
- * 10s OR when the user sends their first message — whichever happens
- * first. Billboarded to stay readable from any camera shot.
+ * 10s, when the user sends their first message, or as soon as they leave
+ * the hub. Billboarded only for the initial establishing shot.
  */
 const TIMEOUT_MS = 10_000;
 
@@ -16,6 +16,8 @@ export function OnboardingHint() {
   const theme = useActiveTheme();
   const lang = useStore((s) => s.lang);
   const hasMessages = useStore((s) => s.chat.messages.some((m) => m.role === "user"));
+  const activeContent = useStore((s) => s.world.activeContent);
+  const cameraTarget = useStore((s) => s.world.cameraTarget);
 
   const [armed, setArmed] = useState(true);
   const opacityRef = useRef(0);
@@ -36,6 +38,13 @@ export function OnboardingHint() {
   useEffect(() => {
     if (hasMessages) setArmed(false);
   }, [hasMessages]);
+
+  // A billboard that is correctly sized at the hub becomes a giant
+  // foreground banner in close wall shots. Retire it on first navigation.
+  useEffect(() => {
+    const leftHub = cameraTarget !== "overview" && cameraTarget !== "hub";
+    if (activeContent || leftHub) setArmed(false);
+  }, [activeContent, cameraTarget]);
 
   useFrame((_, dt) => {
     const target = armed ? 1 : 0;
