@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { isCockpitVariant, readWorldVariant } from "@/world/worldVariant";
 
 /**
  * Shared fade + material plumbing for every hologram scene.
@@ -40,16 +41,17 @@ export function useHoloFade(
 } {
   const rootRef = useRef<THREE.Group>(null);
   const opacityRef = useRef(0);
+  const cockpit = isCockpitVariant(readWorldVariant());
 
   const plateMat = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: new THREE.Color("#060a16"),
+        color: new THREE.Color(cockpit ? "#061014" : "#060a16"),
         transparent: true,
         opacity: 0,
         depthWrite: false,
       }),
-    [],
+    [cockpit],
   );
   // halo + frame are tone-mapped (default). We previously pushed accent
   // colour into HDR space (×1.5) for "selective bloom on the active
@@ -143,11 +145,11 @@ export function useHoloFade(
     const k = 1 - Math.exp(-6 * dt);
     opacityRef.current += (target - opacityRef.current) * k;
 
-    const s = baseScale * (0.88 + 0.12 * opacityRef.current);
+    const s = cockpit ? baseScale : baseScale * (0.88 + 0.12 * opacityRef.current);
     if (rootRef.current) rootRef.current.scale.setScalar(s);
 
     const o = opacityRef.current;
-    plateMat.opacity = 0.88 * o;
+    plateMat.opacity = (cockpit ? 0.96 : 0.88) * o;
     timeRef.current += dt;
     // Frame flicker — ±3.5 % modulation at ~12 Hz.
     const flicker = 1 + 0.035 * Math.sin(timeRef.current * 12.0);
@@ -155,13 +157,15 @@ export function useHoloFade(
     // toward "active" (≥0.6). Gating prevents idle walls from breathing.
     const pulseGain = Math.max(0, o - 0.6) * 2.5;
     const pulse = 1 + 0.04 * pulseGain * Math.sin(timeRef.current * 0.6 * 2 * Math.PI);
-    frameMat.opacity = o * flicker * pulse;
-    haloMat.opacity = 0.18 * o * pulse;
+    frameMat.opacity = cockpit ? 0.46 * o : o * flicker * pulse;
+    haloMat.opacity = cockpit ? 0 : 0.18 * o * pulse;
 
     // Scanlines — tick uTime regardless of fade so a new appear doesn't
     // re-start the scroll; uOpacity handles visibility.
-    scanlineMat.uniforms.uTime.value = timeRef.current;
-    scanlineMat.uniforms.uOpacity.value = o;
+    const timeUniform = scanlineMat.uniforms.uTime;
+    const opacityUniform = scanlineMat.uniforms.uOpacity;
+    if (timeUniform) timeUniform.value = timeRef.current;
+    if (opacityUniform) opacityUniform.value = cockpit ? o * 0.28 : o;
   });
 
   return { rootRef, plateMat, haloMat, frameMat, scanlineMat, opacityRef };

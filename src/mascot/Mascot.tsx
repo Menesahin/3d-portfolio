@@ -4,9 +4,12 @@ import type * as THREE from "three";
 import { useHover } from "@/hooks/useHover";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useStore } from "@/stores";
+import { isCockpitVariant, type WorldVariant } from "@/world/worldVariant";
 import { Emote } from "./Emote";
+import { getEmotionChoreography } from "./emotionChoreography";
 import { GlbMascot } from "./GlbMascot";
-import { mascotConfig } from "./MascotConfig";
+import { KofteThrusterTrail } from "./KofteThrusterTrail";
+import { getMascotConfig } from "./MascotConfig";
 import { ProceduralMascot } from "./ProceduralMascot";
 import { useMascotLocomotion } from "./useMascotLocomotion";
 
@@ -27,13 +30,20 @@ const HOVER_COOLDOWN_MS = 4000;
  * `useMascotLocomotion` hook so this component stays a coordinator
  * (gesture choreography + click + delegating render).
  */
-export function Mascot() {
+export function Mascot({ variant }: { variant: WorldVariant }) {
   const group = useRef<THREE.Group>(null);
   const reduceMotion = usePrefersReducedMotion();
   const hover = useHover();
   const lastHoverGestureAt = useRef(0);
+  const mascotConfig = getMascotConfig(variant);
+  const expression = useStore((s) => s.mascot.expression);
 
-  useMascotLocomotion({ groupRef: group, hovered: hover.hovered });
+  useMascotLocomotion({
+    groupRef: group,
+    hovered: hover.hovered,
+    hoverOffset: mascotConfig.hoverOffset,
+    variant,
+  });
 
   const handleMascotClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
@@ -69,6 +79,18 @@ export function Mascot() {
     };
   }, [hover.hovered, reduceMotion]);
 
+  // A semantic face change starts a matching physical beat. The face remains
+  // held until the next expression while the gesture and emote self-clear.
+  useEffect(() => {
+    if (expression === "idle") return;
+    const cue = getEmotionChoreography(expression);
+    const apply = useStore.getState().applyUiEvent;
+    if (cue.emote) apply({ kind: "mascot.emote", icon: cue.emote });
+    if (cue.gesture && !reduceMotion) {
+      apply({ kind: "mascot.gesture", gesture: cue.gesture });
+    }
+  }, [expression, reduceMotion]);
+
   return (
     <group
       ref={group}
@@ -83,6 +105,7 @@ export function Mascot() {
       ) : (
         <ProceduralMascot />
       )}
+      {isCockpitVariant(variant) && <KofteThrusterTrail />}
       <Emote anchor={mascotConfig.emoteAnchor} />
     </group>
   );

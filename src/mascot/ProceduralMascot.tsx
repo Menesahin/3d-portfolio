@@ -22,6 +22,7 @@ const GESTURE_DURATION_MS: Record<MascotGesture, number> = {
   flip: 1200,
   spin_happy: 1500,
   shy: 1000,
+  celebrate: 1450,
 };
 
 /** Visor emissive colour per expression — expression is held state (no clear). */
@@ -33,6 +34,8 @@ function expressionStyle(
   switch (face) {
     case "happy":
       return { color: "#7BD88F", intensity: cyber ? 1.8 : 0.9 };
+    case "excited":
+      return { color: "#BDF9FF", intensity: cyber ? 2.6 : 1.3 };
     case "surprised":
       return { color: accent, intensity: cyber ? 2.2 : 1.2 };
     case "thinking":
@@ -138,6 +141,12 @@ export function ProceduralMascot() {
           case "shy":
             g.scale.setScalar(1 - 0.15 * bell);
             head_.rotation.y = -0.5 * bell;
+            break;
+          case "celebrate":
+            la.rotation.z = 0.2 + 1.65 * bell;
+            ra.rotation.z = -0.2 - 1.65 * bell;
+            g.position.y += 0.22 * bell;
+            g.scale.setScalar(1 + 0.06 * bell);
             break;
         }
       }

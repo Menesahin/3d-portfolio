@@ -1,0 +1,384 @@
+{
+  "version": 7,
+  "assetName": "Kofte Explorer V7",
+  "coordinateSystem": "threejs-x-right-y-up-negative-z-forward",
+  "assets": {
+    "shell": "/models/cockpit/v7/cockpit-v7-shell.glb",
+    "controls": "/models/cockpit/v7/cockpit-v7-controls.glb",
+    "exterior": "/models/cockpit/v7/kofte-explorer-v7-exterior.glb",
+    "mascot": "/models/cockpit/kofte.glb?v=4"
+  },
+  "sockets": {
+    "hub": [0.0, 0.3, 3.4],
+    "gallery": [0.0, 0.3, -5.9],
+    "projects": [0.0, 0.3, -5.9],
+    "experience": [-7.047753, 0.3, -0.362051],
+    "skills": [7.047753, 0.3, -0.362051],
+    "contact": [4.1, 0.3, 6.45]
+  },
+  "screens": {
+    "projects": {
+      "position": [0.0, 3.15, -7.55],
+      "rotation": [0, 0, 0],
+      "size": [9.2, 3.25]
+    },
+    "experience": {
+      "position": [-8.52307, 3.62, -0.899022],
+      "rotation": [0, 1.22173, 0],
+      "size": [5.7, 3.55]
+    },
+    "skills": {
+      "position": [8.52307, 3.62, -0.899022],
+      "rotation": [0, -1.22173, 0],
+      "size": [5.4, 3.4]
+    },
+    "contact": {
+      "position": [6.3, 2.25, 7.78],
+      "rotation": [0, -1.1, 0],
+      "size": [3.7, 2.05]
+    }
+  },
+  "observationAperture": [0.0, 6.0, -11.28],
+  "earthAnchor": [0.0, 7.2, -38.0],
+  "controls": {
+    "nav-projects": {
+      "node": "KEX7_CTRL_NAV_PROJECTS",
+      "label": "Projects",
+      "action": "navigate.projects",
+      "kind": "button",
+      "position": [-5.2, 1.472143, -6.33],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "nav-experience": {
+      "node": "KEX7_CTRL_NAV_EXPERIENCE",
+      "label": "Experience",
+      "action": "navigate.experience",
+      "kind": "button",
+      "position": [-4.7, 1.472143, -6.33],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "nav-skills": {
+      "node": "KEX7_CTRL_NAV_SKILLS",
+      "label": "Skills",
+      "action": "navigate.skills",
+      "kind": "button",
+      "position": [-4.2, 1.472143, -6.33],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "nav-contact": {
+      "node": "KEX7_CTRL_NAV_CONTACT",
+      "label": "Contact",
+      "action": "navigate.contact",
+      "kind": "button",
+      "position": [-5.2, 1.592143, -6.75],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "nav-overview": {
+      "node": "KEX7_CTRL_NAV_OVERVIEW",
+      "label": "Overview",
+      "action": "navigate.overview",
+      "kind": "button",
+      "position": [-4.7, 1.592143, -6.75],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "nav-home": {
+      "node": "KEX7_CTRL_NAV_HOME",
+      "label": "Home",
+      "action": "navigate.home",
+      "kind": "button",
+      "position": [-4.2, 1.592143, -6.75],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "flight-close": {
+      "node": "KEX7_CTRL_FLIGHT_CLOSE",
+      "label": "Close view",
+      "action": "camera.close",
+      "kind": "rocker",
+      "position": [-2.62, 1.586429, -6.73],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "flight-wide": {
+      "node": "KEX7_CTRL_FLIGHT_WIDE",
+      "label": "Wide view",
+      "action": "camera.wide",
+      "kind": "rocker",
+      "position": [-1.88, 1.575, -6.69],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "system-route": {
+      "node": "KEX7_CTRL_SYSTEM_ROUTE",
+      "label": "Observation lights",
+      "action": "lighting.cycle",
+      "kind": "rocker",
+      "position": [1.62, 1.592143, -6.75],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "system-cover": {
+      "node": "KEX7_CTRL_SYSTEM_COVER",
+      "label": "Reset cover",
+      "action": "system.cover",
+      "kind": "cover",
+      "position": [2.28, 1.70114, -6.765724],
+      "hitSize": [0.4495, 0.24, 0.54]
+    },
+    "system-reset": {
+      "node": "KEX7_CTRL_SYSTEM_RESET",
+      "label": "Reset world",
+      "action": "system.reset",
+      "kind": "guarded",
+      "position": [2.28, 1.57, -6.69],
+      "hitSize": [0.38, 0.24, 0.38]
+    },
+    "com-contact": {
+      "node": "KEX7_CTRL_COM_CONTACT",
+      "label": "Contact",
+      "action": "navigate.contact",
+      "kind": "button",
+      "position": [3.65, 1.475, -6.34],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "com-email": {
+      "node": "KEX7_CTRL_COM_EMAIL",
+      "label": "Email",
+      "action": "contact.email",
+      "kind": "button",
+      "position": [4.11, 1.475, -6.34],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "com-linkedin": {
+      "node": "KEX7_CTRL_COM_LINKEDIN",
+      "label": "LinkedIn",
+      "action": "contact.linkedin",
+      "kind": "button",
+      "position": [4.57, 1.475, -6.34],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "com-copy": {
+      "node": "KEX7_CTRL_COM_COPY",
+      "label": "Copy email",
+      "action": "contact.copy",
+      "kind": "button",
+      "position": [3.65, 1.595, -6.76],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "com-en": {
+      "node": "KEX7_CTRL_COM_EN",
+      "label": "English",
+      "action": "language.en",
+      "kind": "button",
+      "position": [4.11, 1.595, -6.76],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "com-tr": {
+      "node": "KEX7_CTRL_COM_TR",
+      "label": "Turkish",
+      "action": "language.tr",
+      "kind": "button",
+      "position": [4.57, 1.595, -6.76],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "mission-ing": {
+      "node": "KEX7_CTRL_MISSION_ING",
+      "label": "ING",
+      "action": "experience.ing-bank",
+      "kind": "button",
+      "position": [-8.526409, 1.535256, 1.653766],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "mission-formica": {
+      "node": "KEX7_CTRL_MISSION_FORMICA",
+      "label": "Formica",
+      "action": "experience.formica",
+      "kind": "button",
+      "position": [-8.369081, 1.535256, 1.221508],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "mission-nar": {
+      "node": "KEX7_CTRL_MISSION_NAR",
+      "label": "Nar Sistem",
+      "action": "experience.nar-sistem",
+      "kind": "button",
+      "position": [-8.211752, 1.535256, 0.789249],
+      "hitSize": [0.465, 0.24, 0.414]
+    },
+    "engineering-ai": {
+      "node": "KEX7_CTRL_ENGINEERING_AI",
+      "label": "AI",
+      "action": "skills.ai",
+      "kind": "rocker",
+      "position": [8.218592, 1.535256, 0.808043],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "engineering-backend": {
+      "node": "KEX7_CTRL_ENGINEERING_BACKEND",
+      "label": "Backend",
+      "action": "skills.backend",
+      "kind": "rocker",
+      "position": [8.334913, 1.521308, 1.244586],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "engineering-frontend": {
+      "node": "KEX7_CTRL_ENGINEERING_FRONTEND",
+      "label": "Frontend",
+      "action": "skills.frontend",
+      "kind": "rocker",
+      "position": [8.526409, 1.535256, 1.653766],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "engineering-devops": {
+      "node": "KEX7_CTRL_ENGINEERING_DEVOPS",
+      "label": "DevOps",
+      "action": "skills.devops",
+      "kind": "rocker",
+      "position": [8.585072, 1.671256, 0.674655],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "engineering-audio": {
+      "node": "KEX7_CTRL_ENGINEERING_AUDIO",
+      "label": "Cockpit audio",
+      "action": "system.audio",
+      "kind": "rocker",
+      "position": [8.776568, 1.685205, 1.083836],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "engineering-lights": {
+      "node": "KEX7_CTRL_ENGINEERING_LIGHTS",
+      "label": "Cabin lights",
+      "action": "lighting.cycle",
+      "kind": "rocker",
+      "position": [8.89289, 1.671256, 1.520378],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "power-cover": {
+      "node": "KEX7_CTRL_POWER_COVER",
+      "label": "Power cover",
+      "action": "power.cover",
+      "kind": "cover",
+      "position": [7.200922, 1.863299, -2.993133],
+      "hitSize": [0.589, 0.24, 0.792]
+    },
+    "power-master": {
+      "node": "KEX7_CTRL_POWER_MASTER",
+      "label": "Master lighting",
+      "action": "power.toggle",
+      "kind": "guarded",
+      "position": [7.094002, 1.625462, -2.954217],
+      "hitSize": [0.38, 0.24, 0.486]
+    },
+    "power-bus-a": {
+      "node": "KEX7_CTRL_POWER_BUS_A",
+      "label": "Standard light bus",
+      "action": "lighting.standard",
+      "kind": "rocker",
+      "position": [7.32053, 1.639872, -2.536503],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "power-bus-b": {
+      "node": "KEX7_CTRL_POWER_BUS_B",
+      "label": "Observation light bus",
+      "action": "lighting.observation",
+      "kind": "rocker",
+      "position": [7.481279, 1.639872, -2.094847],
+      "hitSize": [0.434, 0.24, 0.38]
+    },
+    "thermal-cool": {
+      "node": "KEX7_CTRL_THERMAL_COOL",
+      "label": "Cool cabin",
+      "action": "lighting.cool",
+      "kind": "dial",
+      "position": [7.727637, 1.578026, -1.067127],
+      "hitSize": [0.38, 0.26, 0.38]
+    },
+    "thermal-neutral": {
+      "node": "KEX7_CTRL_THERMAL_NEUTRAL",
+      "label": "Neutral cabin",
+      "action": "lighting.standard",
+      "kind": "dial",
+      "position": [7.874706, 1.578026, -0.66306],
+      "hitSize": [0.38, 0.26, 0.38]
+    },
+    "thermal-warm": {
+      "node": "KEX7_CTRL_THERMAL_WARM",
+      "label": "Warm cabin",
+      "action": "lighting.warm",
+      "kind": "dial",
+      "position": [8.021774, 1.578026, -0.258992],
+      "hitSize": [0.38, 0.26, 0.38]
+    },
+    "orbital-lever": {
+      "node": "KEX7_CTRL_ORBITAL_LEVER",
+      "label": "Park / Cruise / Warp",
+      "action": "mode.cycle",
+      "kind": "lever",
+      "position": [0.0, 1.524286, -4.75],
+      "hitSize": [0.38, 0.24, 0.38]
+    }
+  },
+  "shots": {
+    "desktop": {
+      "hub": {
+        "position": [0.0, 4.9, 10.1],
+        "target": [0, 2.0, 2.8]
+      },
+      "overview": {
+        "position": [0.0, 5.35, 11.2],
+        "target": [0, 3.05, -1.55]
+      },
+      "gallery": {
+        "position": [0.0, 4.35, 7.4],
+        "target": [0.0, 3.15, -7.55]
+      },
+      "projects": {
+        "position": [0.0, 4.35, 7.4],
+        "target": [0.0, 3.15, -7.55]
+      },
+      "experience": {
+        "position": [0.35, 4.65, 0.9],
+        "target": [-8.52307, 3.62, -0.899022]
+      },
+      "skills": {
+        "position": [-0.35, 4.65, 0.9],
+        "target": [8.52307, 3.62, -0.899022]
+      },
+      "contact": {
+        "position": [1.2, 4.2, 10.4],
+        "target": [6.3, 2.25, 7.78]
+      }
+    },
+    "mobile": {
+      "hub": {
+        "position": [0, 5.4, 10.6],
+        "target": [0, 2.2, 1.5]
+      },
+      "overview": {
+        "position": [0, 5.8, 11.0],
+        "target": [0, 3.3, -1.8]
+      },
+      "gallery": {
+        "position": [0, 4.35, 7.4],
+        "target": [0.0, 3.15, -7.55]
+      },
+      "projects": {
+        "position": [0, 4.35, 7.4],
+        "target": [0.0, 3.15, -7.55]
+      },
+      "experience": {
+        "position": [0.35, 4.65, 0.9],
+        "target": [-8.52307, 2.9, -0.899022]
+      },
+      "skills": {
+        "position": [-0.35, 4.65, 0.9],
+        "target": [8.52307, 2.9, -0.899022]
+      },
+      "contact": {
+        "position": [1.2, 4.5, 10.4],
+        "target": [6.3, 2.25, 7.78]
+      }
+    }
+  },
+  "budgets": {
+    "desktopTriangles": 72000,
+    "mobileTriangles": 45000,
+    "exteriorTriangles": 20000
+  }
+}

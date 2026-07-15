@@ -17,6 +17,7 @@ const GLYPH: Record<EmoteIcon, string> = {
   exclamation: "!",
   star: "★",
   note: "♪",
+  tear: "◆",
 };
 
 /** Auto-clears the emote after this many seconds. */
@@ -38,14 +39,15 @@ export function Emote({ anchor }: Props) {
   }, [emote, setEmote]);
 
   // Float + scale pop
-  const born = useRef(0);
+  const born = useRef(-1);
   useEffect(() => {
-    if (emote) born.current = performance.now() / 1000;
+    if (emote) born.current = -1;
   }, [emote]);
 
   useFrame((state) => {
     if (!billboardRef.current || !emote) return;
-    const age = state.clock.elapsedTime - born.current;
+    if (born.current < 0) born.current = state.clock.elapsedTime;
+    const age = Math.max(0, state.clock.elapsedTime - born.current);
     const pop = Math.min(1, age * 5);
     const rise = Math.min(0.35, age * 0.25);
     billboardRef.current.position.set(anchor[0], anchor[1] + rise, anchor[2]);

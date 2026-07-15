@@ -6,6 +6,9 @@ import { useDebugMode } from "@/hooks/useDebugMode";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useStore } from "@/stores";
+import { COCKPIT_MOBILE_SHOTS, COCKPIT_SHOTS } from "./cockpit/layout";
+import { COCKPIT_V7_MOBILE_SHOTS, COCKPIT_V7_SHOTS } from "./cockpit/v7/layout";
+import { isCockpitVariant, type WorldVariant } from "./worldVariant";
 import type { ZoneId } from "./zones";
 
 /**
@@ -19,7 +22,8 @@ import type { ZoneId } from "./zones";
  * tool fire that opens a hologram also reframes the camera; an explicit
  * setCameraTarget (e.g. "overview") wins until activeContent changes.
  *
- * Mobile uses its own portrait shot table plus a wider lens (45° → 65°),
+ * Mobile uses its own portrait shot table plus a wider lens (45° → 65°;
+ * 72° for the panoramic cockpit),
  * keeping destination panels centred without exposing the desktop ceiling
  * assembly or relying on a single distance multiplier for every wall.
  */
@@ -65,12 +69,14 @@ const ZOOM_FACTORS = {
 } as const;
 
 const FOV_DESKTOP = 45;
+const FOV_COCKPIT_DESKTOP = 56;
 // 65° vertical FOV gives roughly 33° horizontal FOV at iPhone portrait
 // aspect. Combined with the 18.3u Projects shot, that fits the ~10.5u
 // four-card wall; 55° clipped Vocabuddy and The Cup XI at the edges.
 const FOV_MOBILE = 65;
+const FOV_COCKPIT_MOBILE = 72;
 
-export function CameraRig() {
+export function CameraRig({ variant }: { variant: WorldVariant }) {
   const controlsRef = useRef<CameraControls>(null);
   const reduceMotion = usePrefersReducedMotion();
   const debug = useDebugMode();
@@ -87,11 +93,17 @@ export function CameraRig() {
   // window-resize-induced query change, etc.).
   useEffect(() => {
     if (!(camera instanceof THREE.PerspectiveCamera)) return;
-    const desired = isMobile ? FOV_MOBILE : FOV_DESKTOP;
+    const desired = isMobile
+      ? isCockpitVariant(variant)
+        ? FOV_COCKPIT_MOBILE
+        : FOV_MOBILE
+      : isCockpitVariant(variant)
+        ? FOV_COCKPIT_DESKTOP
+        : FOV_DESKTOP;
     if (camera.fov === desired) return;
     camera.fov = desired;
     camera.updateProjectionMatrix();
-  }, [isMobile, camera]);
+  }, [isMobile, camera, variant]);
 
   // Mirror activeContent.kind → cameraTarget so opening a hologram (via
   // chat tool, debug panel, click) automatically reframes the camera.
@@ -111,7 +123,18 @@ export function CameraRig() {
     const cc = controlsRef.current;
     if (!cc) return;
 
-    const shots = isMobile ? MOBILE_SHOTS : SHOTS;
+    const shots =
+      variant === "cockpit-v7"
+        ? isMobile
+          ? COCKPIT_V7_MOBILE_SHOTS
+          : COCKPIT_V7_SHOTS
+        : variant === "cockpit"
+          ? isMobile
+            ? COCKPIT_MOBILE_SHOTS
+            : COCKPIT_SHOTS
+          : isMobile
+            ? MOBILE_SHOTS
+            : SHOTS;
     const shot = shots[target] ?? shots.hub;
     const factor = ZOOM_FACTORS[zoom];
 
@@ -126,7 +149,7 @@ export function CameraRig() {
 
     cc.smoothTime = reduceMotion ? 0 : 0.85;
     void cc.setLookAt(tx + dx, ty + dy, tz + dz, tx, ty, tz, !reduceMotion);
-  }, [target, zoom, reduceMotion, isMobile]);
+  }, [target, zoom, reduceMotion, isMobile, variant]);
 
   // Debug helper: press `c` to copy current camera pos + target as a
   // ready-to-paste SHOTS entry. Only wired while `?debug=1`.

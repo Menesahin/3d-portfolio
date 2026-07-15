@@ -7,7 +7,7 @@ export const tr: Dict = {
     location: "Ankara, Türkiye",
   },
   hero: {
-    greeting: "Merhaba — ben Enes'in yol arkadaşıyım. Onun hakkında ne istersen sor.",
+    greeting: "Merhaba — ben Köfte, Enes'in kokpit yardımcısıyım. Onun hakkında ne istersen sor.",
     cta: "Sohbete başla",
   },
   chat: {
@@ -42,7 +42,7 @@ export const tr: Dict = {
     reset: "Dünyayı sıfırla",
   },
   footer: {
-    attribution: "Maskot: Quaternius tarafından Animated Robot, Poly Pizza (CC-BY).",
+    attribution: "Maskot: özel Köfte 3B modeli.",
     madeWith: "React, R3F, FastAPI ve LangGraph ile yapıldı.",
   },
 };

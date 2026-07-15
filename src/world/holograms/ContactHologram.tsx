@@ -5,6 +5,8 @@ import type * as THREE from "three";
 import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { useClipboard } from "@/hooks/useClipboard";
 import { mascotPosRef } from "@/mascot/mascotPosRef";
+import { COCKPIT_V7_LAYOUT } from "@/world/cockpit/v7/layout";
+import { isCockpitVariant, readWorldVariant } from "@/world/worldVariant";
 import { HoloChrome } from "./HoloChrome";
 import {
   HOLO_ALPHA_HEADER,
@@ -55,10 +57,12 @@ export function ContactHologram({
   onDismiss: () => void;
 }) {
   const theme = useActiveTheme();
+  const variant = readWorldVariant();
+  const cockpit = isCockpitVariant(variant);
   const { rootRef, plateMat, haloMat, frameMat, scanlineMat } = useHoloFade(
     visible ? 1 : 0,
     theme.palette.accent,
-    1.4,
+    cockpit ? 0.95 : 1.4,
   );
   const [mounted, setMounted] = useState(visible);
   // Outer group whose position we drive imperatively from `mascotPosRef`,
@@ -83,84 +87,101 @@ export function ContactHologram({
   // doesn't clip the mascot silhouette in the contact close-up shot.
   useFrame(() => {
     const g = followRef.current;
-    if (!g) return;
+    if (!g || cockpit) return;
     const p = mascotPosRef.current;
     g.position.set(p.x + 2.4, p.y + 2.0, p.z - 0.4);
   });
 
   if (!mounted) return null;
 
+  const panel = (
+    <group ref={rootRef}>
+      <HoloChrome
+        width={PANEL_W}
+        height={PANEL_H}
+        plateMat={plateMat}
+        haloMat={haloMat}
+        frameMat={frameMat}
+        scanlineMat={scanlineMat}
+      />
+
+      {/* Header */}
+      <Text
+        position={[0, PANEL_H / 2 - HOLO_OFFSET_HEADER, 0.01]}
+        fontSize={HOLO_FONT_HEADER}
+        color={theme.palette.accent}
+        anchorX="center"
+        anchorY="middle"
+        fontWeight={700}
+        fillOpacity={HOLO_ALPHA_HEADER}
+        letterSpacing={HOLO_LETTER_HEADER}
+      >
+        CONTACT · ONLINE
+      </Text>
+      <Text
+        position={[0, PANEL_H / 2 - HOLO_OFFSET_TITLE, 0.01]}
+        fontSize={HOLO_FONT_SUBTITLE}
+        color={HOLO_COLOR_SOFT}
+        fillOpacity={HOLO_ALPHA_SUBTITLE}
+        anchorX="center"
+        anchorY="middle"
+      >
+        Enes Şahin · Ankara, Turkey
+      </Text>
+
+      {/* Divider */}
+      <mesh position={[0, PANEL_H / 2 - HOLO_OFFSET_TITLE - 0.16, 0.008]} material={frameMat}>
+        <planeGeometry args={[PANEL_W * 0.82, 0.006]} />
+      </mesh>
+
+      {/* Interactive link rows — DOM so hover/click/copy work. */}
+      <Html
+        position={[0, -0.05, 0.02]}
+        transform
+        center
+        occlude={false}
+        distanceFactor={3}
+        style={{ width: 420, pointerEvents: "auto" }}
+      >
+        <div className="holo-link-stack">
+          {CHANNELS.map((c) => (
+            <ContactLinkRow key={c.key} channel={c} />
+          ))}
+        </div>
+      </Html>
+
+      {/* Dismiss hit-plane — clicks outside the HTML row still close. */}
+      <mesh
+        position={[0, 0, -0.03]}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDismiss();
+        }}
+      >
+        <planeGeometry args={[PANEL_W, PANEL_H]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+
+  if (cockpit) {
+    const screen =
+      variant === "cockpit-v7"
+        ? COCKPIT_V7_LAYOUT.screens.contact
+        : {
+            position: [4.49, 2.25, 6.03] as [number, number, number],
+            rotation: [0, -0.16, 0] as [number, number, number],
+          };
+    return (
+      <group position={screen.position} rotation={screen.rotation}>
+        <group position={variant === "cockpit-v7" ? [1.25, 0, 0.9] : [0, 0, 0]}>{panel}</group>
+      </group>
+    );
+  }
+
   return (
     <group ref={followRef}>
-      <Billboard follow>
-        <group ref={rootRef}>
-          <HoloChrome
-            width={PANEL_W}
-            height={PANEL_H}
-            plateMat={plateMat}
-            haloMat={haloMat}
-            frameMat={frameMat}
-            scanlineMat={scanlineMat}
-          />
-
-          {/* Header */}
-          <Text
-            position={[0, PANEL_H / 2 - HOLO_OFFSET_HEADER, 0.01]}
-            fontSize={HOLO_FONT_HEADER}
-            color={theme.palette.accent}
-            anchorX="center"
-            anchorY="middle"
-            fontWeight={700}
-            fillOpacity={HOLO_ALPHA_HEADER}
-            letterSpacing={HOLO_LETTER_HEADER}
-          >
-            CONTACT · ONLINE
-          </Text>
-          <Text
-            position={[0, PANEL_H / 2 - HOLO_OFFSET_TITLE, 0.01]}
-            fontSize={HOLO_FONT_SUBTITLE}
-            color={HOLO_COLOR_SOFT}
-            fillOpacity={HOLO_ALPHA_SUBTITLE}
-            anchorX="center"
-            anchorY="middle"
-          >
-            Enes Şahin · Ankara, Turkey
-          </Text>
-
-          {/* Divider */}
-          <mesh position={[0, PANEL_H / 2 - HOLO_OFFSET_TITLE - 0.16, 0.008]} material={frameMat}>
-            <planeGeometry args={[PANEL_W * 0.82, 0.006]} />
-          </mesh>
-
-          {/* Interactive link rows — DOM so hover/click/copy work. */}
-          <Html
-            position={[0, -0.05, 0.02]}
-            transform
-            center
-            occlude={false}
-            distanceFactor={3}
-            style={{ width: 420, pointerEvents: "auto" }}
-          >
-            <div className="holo-link-stack">
-              {CHANNELS.map((c) => (
-                <ContactLinkRow key={c.key} channel={c} />
-              ))}
-            </div>
-          </Html>
-
-          {/* Dismiss hit-plane — clicks outside the HTML row still close. */}
-          <mesh
-            position={[0, 0, -0.03]}
-            onClick={(e) => {
-              e.stopPropagation();
-              onDismiss();
-            }}
-          >
-            <planeGeometry args={[PANEL_W, PANEL_H]} />
-            <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-          </mesh>
-        </group>
-      </Billboard>
+      <Billboard follow>{panel}</Billboard>
     </group>
   );
 }

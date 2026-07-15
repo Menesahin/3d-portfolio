@@ -3,9 +3,12 @@ import { findLastAssistant } from "@/chat/lastAssistant";
 import { useChatStream } from "@/chat/useChatStream";
 import { onboarding } from "@/content/onboarding";
 import { useFirstVisit } from "@/hooks/useFirstVisit";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/stores";
+import type { Suggestion } from "@/types/tools";
+import { isCockpitVariant, readWorldVariant } from "@/world/worldVariant";
 
 /**
  * Twitch-style floating chat overlay — no containing plate. Messages
@@ -31,6 +34,8 @@ export function ChatDock() {
   const clearSuggestions = useStore((s) => s.clearSuggestions);
   const finishStreaming = useStore((s) => s.finishStreaming);
   const activeContent = useStore((s) => s.world.activeContent);
+  const isMobile = useIsMobile();
+  const compactCockpit = isMobile && isCockpitVariant(readWorldVariant());
   const { isFirstVisit } = useFirstVisit();
   const { send, stop, isStreaming } = useChatStream();
 
@@ -106,18 +111,75 @@ export function ChatDock() {
 
   const lastAssistant = useMemo(() => findLastAssistant(messages), [messages]);
   const isPresenting = activeContent !== null;
+  // Section presentations used to hide the transcript completely. That made
+  // the cockpit feel as if COMMS had gone offline whenever a project,
+  // experience or skill screen opened. Keep the latest exchange visible in a
+  // compact strip instead; the full transcript returns automatically at hub.
+  const compactFeed = compactCockpit || isPresenting;
+  const feedMessages = isPresenting
+    ? messages.slice(-2)
+    : compactCockpit
+      ? messages.filter((message) => message.id !== "onboard-greeting").slice(-2)
+      : messages;
+  const visibleSuggestions = isPresenting ? suggestions.slice(0, 3) : suggestions;
+  const hasFeedContent = feedMessages.length > 0 || visibleSuggestions.length > 0;
+
+  const activateSuggestion = useCallback(
+    (suggestion: Suggestion) => {
+      const state = useStore.getState();
+      const navigate = (
+        target: "projects" | "experience" | "skills" | "contact",
+        event:
+          | { kind: "content.project"; project: "vocabuddy" }
+          | { kind: "content.experience"; company: "formica" }
+          | { kind: "content.skill_group"; group: "ai" }
+          | { kind: "content.contact_card" },
+      ) => {
+        clearSuggestions();
+        state.applyUiEvent({ kind: "camera.focus", target });
+        state.applyUiEvent({ kind: "mascot.move", zone: target });
+        state.applyUiEvent(event);
+      };
+
+      switch (suggestion.id) {
+        case "projects":
+          navigate("projects", { kind: "content.project", project: "vocabuddy" });
+          return;
+        case "experience":
+          navigate("experience", { kind: "content.experience", company: "formica" });
+          return;
+        case "skills":
+          navigate("skills", { kind: "content.skill_group", group: "ai" });
+          return;
+        case "contact":
+          navigate("contact", { kind: "content.contact_card" });
+          return;
+        default:
+          clearSuggestions();
+          void send(suggestion.prompt);
+      }
+    },
+    [clearSuggestions, send],
+  );
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex flex-col items-end">
       {/* --- Message feed: stacks up from bottom, fades into scene at top --- */}
-      {!isPresenting && (
+      {hasFeedContent && (
         <div
           ref={feedRef}
+          data-presenting={isPresenting ? "true" : "false"}
           aria-live="polite"
           aria-atomic="false"
-          className="chat-feed pointer-events-auto flex max-h-[46vh] w-full max-w-[440px] flex-col gap-1.5 overflow-y-auto px-5 pb-2 pt-10"
+          className={cn(
+            "chat-feed pointer-events-auto flex max-h-[46vh] w-full max-w-[440px] flex-col gap-1.5 overflow-y-auto px-5 pb-2 pt-10",
+            isPresenting &&
+              "!max-h-[24vh] max-w-[420px] rounded-tl-2xl border-l border-t border-[var(--holo-edge)] bg-black/28 px-5 pb-2 pt-4 backdrop-blur-sm [mask-image:none]",
+            compactCockpit &&
+              "!max-h-20 max-w-full overflow-y-hidden px-3 pb-1 pt-0 [mask-image:none]",
+          )}
         >
-          {messages.map((m) => (
+          {feedMessages.map((m) => (
             <Line
               key={m.id}
               role={m.role}
@@ -127,17 +189,23 @@ export function ChatDock() {
 
           {/* Follow-up chips — shown only when the agent left any and the
               stream has completed for the current turn. */}
-          {suggestions.length > 0 && !isStreaming && (
-            <div className="chat-line flex flex-wrap justify-end gap-1.5 pt-1">
-              {suggestions.map((s) => (
+          {visibleSuggestions.length > 0 && !isStreaming && (
+            <div
+              className={cn(
+                "chat-line flex flex-wrap justify-end gap-1.5 pt-1",
+                compactFeed &&
+                  "w-full !flex-wrap justify-center gap-1.5 overflow-visible pb-1 pt-0",
+              )}
+            >
+              {visibleSuggestions.map((s) => (
                 <button
                   key={s.id}
                   type="button"
-                  onClick={() => {
-                    clearSuggestions();
-                    void send(s.prompt);
-                  }}
-                  className="pointer-events-auto rounded-full border border-[var(--color-accent)]/50 bg-[var(--color-accent)]/12 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-[var(--color-accent)] shadow-[0_0_10px_-4px_var(--color-accent)] transition hover:bg-[var(--color-accent)]/25"
+                  onClick={() => activateSuggestion(s)}
+                  className={cn(
+                    "pointer-events-auto shrink-0 rounded-full border border-[var(--color-accent)]/50 bg-[var(--color-accent)]/12 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-[var(--color-accent)] shadow-[0_0_10px_-4px_var(--color-accent)] transition hover:bg-[var(--color-accent)]/25",
+                    compactFeed && "px-2 py-0.5 text-[9px] tracking-[0.08em]",
+                  )}
                 >
                   {s.label}
                 </button>
@@ -154,7 +222,7 @@ export function ChatDock() {
           void send(draft);
           setDraft("");
         }}
-        className="pointer-events-auto mb-5 mr-5 flex w-[min(440px,92vw)] items-center gap-2 rounded-full border border-[var(--holo-edge)] bg-black/45 px-4 py-2 text-[13px] backdrop-blur-md transition focus-within:border-[var(--color-accent)] focus-within:shadow-[0_0_18px_-6px_var(--color-accent)]"
+        className="pointer-events-auto mb-5 mr-5 flex w-[min(440px,92vw)] items-center gap-2 rounded-full border border-[var(--holo-edge)] bg-black/45 px-4 py-2 text-[13px] backdrop-blur-md transition focus-within:border-[var(--color-accent)] focus-within:shadow-[0_0_18px_-6px_var(--color-accent)] max-[480px]:mb-3 max-[480px]:mr-3 max-[480px]:w-[calc(100vw-1.5rem)]"
       >
         <span
           aria-hidden

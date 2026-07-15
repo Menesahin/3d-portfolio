@@ -4,6 +4,7 @@ Each tool is sync (so `get_stream_writer()` works reliably; see plan §7.3
 known gotcha). Tools emit a structured UI event through the stream and
 return a ToolMessage so the LLM sees a clean confirmation.
 """
+
 from typing import Annotated
 
 from langchain_core.messages import ToolMessage
@@ -17,6 +18,12 @@ from app.agent.events import (
     CameraZoom,
     CameraZoomEvent,
     ChatSuggestions,
+    CockpitFlightMode,
+    CockpitFlightModeEvent,
+    CockpitLightingEvent,
+    CockpitLightingPreset,
+    CockpitViewEvent,
+    CockpitViewMode,
     CompanyId,
     ContentContactCard,
     ContentExperience,
@@ -69,6 +76,7 @@ def _emit_ack(event: UiEvent, ack: str, tool_call_id: str) -> Command:
 #  Camera
 # ---------------------------------------------------------------------------
 
+
 @tool
 def camera_focus(
     target: CameraTarget,
@@ -76,7 +84,9 @@ def camera_focus(
     duration: float | None = None,
 ) -> Command:
     """Dolly the camera to a named zone or "overview". Smooth cinematic transition."""
-    return _emit_ack(CameraFocus(target=target, duration=duration), f"camera focused on {target}", tool_call_id)
+    return _emit_ack(
+        CameraFocus(target=target, duration=duration), f"camera focused on {target}", tool_call_id
+    )
 
 
 @tool
@@ -91,6 +101,7 @@ def camera_zoom(
 # ---------------------------------------------------------------------------
 #  Mascot movement
 # ---------------------------------------------------------------------------
+
 
 @tool
 def mascot_move_to(
@@ -108,7 +119,11 @@ def mascot_orbit(
     revolutions: int | None = None,
 ) -> Command:
     """Orbit the mascot around a zone (default: 1 full revolution)."""
-    return _emit_ack(MascotOrbit(target=target, revolutions=revolutions), f"mascot orbiting {target}", tool_call_id)
+    return _emit_ack(
+        MascotOrbit(target=target, revolutions=revolutions),
+        f"mascot orbiting {target}",
+        tool_call_id,
+    )
 
 
 @tool
@@ -132,13 +147,16 @@ def mascot_return_to_hub(
 #  Mascot body / face
 # ---------------------------------------------------------------------------
 
+
 @tool
 def mascot_gesture(
     gesture: MascotGesture,
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Trigger a full-body gesture clip (wave, point, bow, dance, ...)."""
-    return _emit_ack(MascotGestureEvent(gesture=gesture), f"mascot gestured {gesture}", tool_call_id)
+    return _emit_ack(
+        MascotGestureEvent(gesture=gesture), f"mascot gestured {gesture}", tool_call_id
+    )
 
 
 @tool
@@ -164,13 +182,18 @@ def mascot_expression(
     face: MascotExpression,
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
-    """Set the mascot face expression (idle, happy, surprised, thinking, sad, wink)."""
+    """Set Köfte's coordinated emotion (idle, happy, excited, surprised, thinking, sad, wink).
+
+    The frontend synchronizes the selected face with a fitting hand gesture,
+    body pose and short emote. Use excited for genuinely big reveals or wins.
+    """
     return _emit_ack(MascotExpressionEvent(face=face), f"mascot expression -> {face}", tool_call_id)
 
 
 # ---------------------------------------------------------------------------
 #  World
 # ---------------------------------------------------------------------------
+
 
 @tool
 def world_reset(
@@ -180,9 +203,49 @@ def world_reset(
     return _emit_ack(WorldReset(), "world reset", tool_call_id)
 
 
+@tool
+def cockpit_lighting(
+    preset: CockpitLightingPreset,
+    tool_call_id: Annotated[str, InjectedToolCallId],
+) -> Command:
+    """Set the physical cockpit cabin lighting preset."""
+    return _emit_ack(
+        CockpitLightingEvent(preset=preset),
+        f"cockpit lighting set to {preset}",
+        tool_call_id,
+    )
+
+
+@tool
+def cockpit_flight_mode(
+    mode: CockpitFlightMode,
+    tool_call_id: Annotated[str, InjectedToolCallId],
+) -> Command:
+    """Set the orbital console lever to park, cruise, or cinematic warp."""
+    return _emit_ack(
+        CockpitFlightModeEvent(mode=mode),
+        f"cockpit flight mode set to {mode}",
+        tool_call_id,
+    )
+
+
+@tool
+def cockpit_view(
+    mode: CockpitViewMode,
+    tool_call_id: Annotated[str, InjectedToolCallId],
+) -> Command:
+    """Switch between the interactive cockpit interior and the exterior orbital spacecraft view."""
+    return _emit_ack(
+        CockpitViewEvent(mode=mode),
+        f"cockpit view set to {mode}",
+        tool_call_id,
+    )
+
+
 # ---------------------------------------------------------------------------
 #  Content (drive side content panels)
 # ---------------------------------------------------------------------------
+
 
 @tool
 def content_experience(
@@ -190,7 +253,9 @@ def content_experience(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """Render an experience detail card for a company."""
-    return _emit_ack(ContentExperience(company=company), f"showing experience: {company}", tool_call_id)
+    return _emit_ack(
+        ContentExperience(company=company), f"showing experience: {company}", tool_call_id
+    )
 
 
 @tool
@@ -223,12 +288,13 @@ def content_contact_card(
 #  Chat hint chips
 # ---------------------------------------------------------------------------
 
+
 @tool
 def suggest_followups(
     items: list[Suggestion],
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
-    """Offer the user 3–5 short follow-up chips that guide what to ask next.
+    """Offer the user 3-5 short follow-up chips that guide what to ask next.
 
     Call this ONCE at the end of every substantive turn. `items` is a list
     of {id, label, prompt}:
@@ -243,7 +309,9 @@ def suggest_followups(
       {id:"exp", label:"Experience", prompt:"What's Enes's work experience?"},
       {id:"contact", label:"Contact", prompt:"How can I reach Enes?"},
     """
-    return _emit_ack(ChatSuggestions(items=items), f"{len(items)} follow-up chips shown", tool_call_id)
+    return _emit_ack(
+        ChatSuggestions(items=items), f"{len(items)} follow-up chips shown", tool_call_id
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -262,6 +330,9 @@ ALL_TOOLS = [
     mascot_emote,
     mascot_expression,
     world_reset,
+    cockpit_lighting,
+    cockpit_flight_mode,
+    cockpit_view,
     content_experience,
     content_project,
     content_skill_group,

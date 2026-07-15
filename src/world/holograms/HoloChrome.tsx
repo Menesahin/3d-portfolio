@@ -1,4 +1,5 @@
 import type * as THREE from "three";
+import { isCockpitVariant, readWorldVariant } from "@/world/worldVariant";
 import { HoloScanlines } from "./HoloScanlines";
 
 const FRAME_THICK = 0.028;
@@ -34,6 +35,7 @@ export function HoloChrome({
 }) {
   const w = width + frameInset * 2;
   const h = height + frameInset * 2;
+  const embedded = isCockpitVariant(readWorldVariant());
   const halfW = w / 2;
   const halfH = h / 2;
   // Brackets sit just outside the frame and overshoot it by ~50% so the
@@ -41,6 +43,39 @@ export function HoloChrome({
   const bracketOffset = FRAME_THICK / 2 + 0.012;
   const bracketX = halfW + bracketOffset;
   const bracketY = halfH + bracketOffset;
+
+  if (embedded) {
+    return (
+      <group>
+        <mesh position={[0, 0, -0.012]} material={plateMat}>
+          <planeGeometry args={[w, h]} />
+        </mesh>
+        <mesh position={[0, halfH - 0.07, -0.004]}>
+          <planeGeometry args={[w - 0.04, 0.14]} />
+          <meshBasicMaterial color="#02090c" transparent opacity={0.92} depthWrite={false} />
+        </mesh>
+        <mesh position={[0, -halfH + 0.045, -0.004]}>
+          <planeGeometry args={[w - 0.04, 0.09]} />
+          <meshBasicMaterial color="#0b1719" transparent opacity={0.96} depthWrite={false} />
+        </mesh>
+        {scanlineMat ? (
+          <HoloScanlines width={w - 0.04} height={h - 0.18} material={scanlineMat} />
+        ) : null}
+        <mesh position={[0, halfH - 0.015, 0.002]} material={frameMat}>
+          <planeGeometry args={[w - 0.04, 0.012]} />
+        </mesh>
+        <mesh position={[0, -halfH + 0.015, 0.002]} material={frameMat}>
+          <planeGeometry args={[w - 0.04, 0.012]} />
+        </mesh>
+        <mesh position={[-halfW + 0.015, 0, 0.002]} material={frameMat}>
+          <planeGeometry args={[0.012, h - 0.04]} />
+        </mesh>
+        <mesh position={[halfW - 0.015, 0, 0.002]} material={frameMat}>
+          <planeGeometry args={[0.012, h - 0.04]} />
+        </mesh>
+      </group>
+    );
+  }
 
   return (
     <group>
@@ -71,6 +106,8 @@ export function HoloChrome({
         <planeGeometry args={[FRAME_THICK, h]} />
       </mesh>
 
+      {/* Cyber L-brackets belong to the legacy hologram language. Cockpit
+          screens already have deep Blender bezels and physical fasteners. */}
       {/* Cyber L-brackets — four corners. Each bracket is two thin strips
           at 90°, slightly outside the frame, overshooting the corner. */}
       {/* Top-left */}

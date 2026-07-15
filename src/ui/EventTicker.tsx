@@ -71,16 +71,18 @@ function summarise(ev: UiEvent): string {
       return `→ ${ev.direction}`;
     case "mascot.orbit":
       return `→ ${ev.target}`;
-    case "world.highlight_zone":
-      return `→ ${ev.zone}`;
-    case "world.show_hologram":
-      return `→ ${ev.zone}/${ev.contentId}`;
     case "content.experience":
       return `→ ${ev.company}`;
     case "content.project":
       return `→ ${ev.project}`;
     case "content.skill_group":
       return `→ ${ev.group}`;
+    case "cockpit.lighting":
+      return `→ ${ev.preset}`;
+    case "cockpit.flight_mode":
+      return `→ ${ev.mode}`;
+    case "cockpit.view":
+      return `→ ${ev.mode}`;
     default:
       return "";
   }

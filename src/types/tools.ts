@@ -15,7 +15,8 @@ export type EmoteIcon =
   | "zzz"
   | "exclamation"
   | "star"
-  | "note";
+  | "note"
+  | "tear";
 
 export type MascotGesture =
   | "wave"
@@ -26,9 +27,17 @@ export type MascotGesture =
   | "dance"
   | "flip"
   | "spin_happy"
-  | "shy";
+  | "shy"
+  | "celebrate";
 
-export type MascotExpression = "idle" | "happy" | "surprised" | "thinking" | "sad" | "wink";
+export type MascotExpression =
+  | "idle"
+  | "happy"
+  | "excited"
+  | "surprised"
+  | "thinking"
+  | "sad"
+  | "wink";
 
 export type CameraTarget = ZoneId | "hub" | "overview";
 export type CameraZoom = "close" | "medium" | "wide";
@@ -37,6 +46,9 @@ export type DartDirection = "up" | "down" | "left" | "right" | "away";
 export type ProjectId = "vocabuddy" | "shotmock" | "claude-voice" | "thecupxi";
 export type CompanyId = "nar-sistem" | "formica" | "ing-bank";
 export type SkillGroup = "ai" | "backend" | "frontend" | "devops";
+export type CockpitLightingPreset = "standard" | "observation" | "cool" | "warm" | "alert" | "dim";
+export type CockpitFlightMode = "park" | "cruise" | "warp";
+export type CockpitViewMode = "interior" | "exterior";
 
 /**
  * Chat follow-up suggestion chip. Emitted by the agent's
@@ -73,6 +85,9 @@ export type UiEvent =
   | { kind: "mascot.expression"; face: MascotExpression }
   /* World */
   | { kind: "world.reset" }
+  | { kind: "cockpit.lighting"; preset: CockpitLightingPreset }
+  | { kind: "cockpit.flight_mode"; mode: CockpitFlightMode }
+  | { kind: "cockpit.view"; mode: CockpitViewMode }
   /* Content (drives the specialized hologram scenes) */
   | { kind: "content.experience"; company: CompanyId }
   | { kind: "content.project"; project: ProjectId }

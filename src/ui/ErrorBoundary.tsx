@@ -16,19 +16,19 @@ interface State {
  * dock, header, etc. — keeps working).
  */
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false };
+  override state: State = { hasError: false };
 
   static getDerivedStateFromError(): State {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo): void {
+  override componentDidCatch(error: Error, info: ErrorInfo): void {
     if (typeof console !== "undefined") {
       console.error("[ErrorBoundary]", error, info.componentStack);
     }
   }
 
-  render(): ReactNode {
+  override render(): ReactNode {
     return this.state.hasError ? this.props.fallback : this.props.children;
   }
 }

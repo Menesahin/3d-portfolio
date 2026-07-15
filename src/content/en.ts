@@ -5,7 +5,7 @@ export const en = {
     location: "Ankara, Turkey",
   },
   hero: {
-    greeting: "Hi — I'm the companion of Enes. Ask me anything about him.",
+    greeting: "Hi — I'm Köfte, Enes's cockpit copilot. Ask me anything about him.",
     cta: "Start chatting",
   },
   chat: {
@@ -40,7 +40,7 @@ export const en = {
     reset: "Reset world",
   },
   footer: {
-    attribution: "Mascot: Animated Robot by Quaternius via Poly Pizza (CC-BY).",
+    attribution: "Mascot: custom Köfte 3D model.",
     madeWith: "Built with React, R3F, FastAPI and LangGraph.",
   },
 };

@@ -1,8 +1,12 @@
 import type { StateCreator } from "zustand";
-import type { EmoteIcon, MascotExpression, MascotGesture } from "@/types/tools";
+import type { DartDirection, EmoteIcon, MascotExpression, MascotGesture } from "@/types/tools";
 import type { ZoneId } from "@/world/zones";
 
 export type MascotState = "idle" | "moving" | "gesturing" | "expressing";
+
+export type MascotSpecialMotion =
+  | { kind: "orbit"; target: ZoneId; revolutions: number; startedAt: number }
+  | { kind: "dart"; direction: DartDirection; startedAt: number };
 
 export type MascotSlice = {
   mascot: {
@@ -12,6 +16,8 @@ export type MascotSlice = {
     gesture: MascotGesture | null;
     currentZone: ZoneId;
     targetZone: ZoneId | null;
+    specialMotion: MascotSpecialMotion | null;
+    pointTarget: { target: ZoneId | "user"; startedAt: number } | null;
   };
   setMascotState: (s: MascotState) => void;
   setExpression: (e: MascotExpression) => void;
@@ -19,6 +25,11 @@ export type MascotSlice = {
   setGesture: (g: MascotGesture | null) => void;
   moveMascotTo: (zone: ZoneId) => void;
   arriveAtZone: () => void;
+  startMascotOrbit: (target: ZoneId, revolutions: number) => void;
+  startMascotDart: (direction: DartDirection) => void;
+  finishMascotSpecialMotion: () => void;
+  pointMascotAt: (target: ZoneId | "user") => void;
+  clearMascotPoint: () => void;
 };
 
 export const createMascotSlice: StateCreator<MascotSlice, [], [], MascotSlice> = (set, get) => ({
@@ -29,6 +40,8 @@ export const createMascotSlice: StateCreator<MascotSlice, [], [], MascotSlice> =
     gesture: null,
     currentZone: "hub",
     targetZone: null,
+    specialMotion: null,
+    pointTarget: null,
   },
   setMascotState: (s) => set((prev) => ({ mascot: { ...prev.mascot, state: s } })),
   setExpression: (e) => set((prev) => ({ mascot: { ...prev.mascot, expression: e } })),
@@ -36,7 +49,7 @@ export const createMascotSlice: StateCreator<MascotSlice, [], [], MascotSlice> =
   setGesture: (g) => set((prev) => ({ mascot: { ...prev.mascot, gesture: g } })),
   moveMascotTo: (zone) =>
     set((prev) => ({
-      mascot: { ...prev.mascot, state: "moving", targetZone: zone },
+      mascot: { ...prev.mascot, state: "moving", targetZone: zone, specialMotion: null },
     })),
   arriveAtZone: () => {
     const { targetZone } = get().mascot;
@@ -50,4 +63,40 @@ export const createMascotSlice: StateCreator<MascotSlice, [], [], MascotSlice> =
       },
     }));
   },
+  startMascotOrbit: (target, revolutions) =>
+    set((prev) => ({
+      mascot: {
+        ...prev.mascot,
+        state: "moving",
+        targetZone: null,
+        specialMotion: {
+          kind: "orbit",
+          target,
+          revolutions: Math.max(1, Math.min(3, revolutions)),
+          startedAt: performance.now(),
+        },
+      },
+    })),
+  startMascotDart: (direction) =>
+    set((prev) => ({
+      mascot: {
+        ...prev.mascot,
+        state: "moving",
+        targetZone: null,
+        specialMotion: { kind: "dart", direction, startedAt: performance.now() },
+      },
+    })),
+  finishMascotSpecialMotion: () =>
+    set((prev) => ({
+      mascot: { ...prev.mascot, state: "idle", specialMotion: null },
+    })),
+  pointMascotAt: (target) =>
+    set((prev) => ({
+      mascot: {
+        ...prev.mascot,
+        gesture: "point",
+        pointTarget: { target, startedAt: performance.now() },
+      },
+    })),
+  clearMascotPoint: () => set((prev) => ({ mascot: { ...prev.mascot, pointTarget: null } })),
 });

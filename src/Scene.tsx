@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Suspense } from "react";
 import * as THREE from "three";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useStore } from "@/stores";
 import { WorldScene } from "@/world/WorldScene";
 
@@ -21,14 +22,17 @@ import { WorldScene } from "@/world/WorldScene";
  *    user clicks the empty background.
  */
 export default function Scene() {
+  const isMobile = useIsMobile();
+
   return (
     <Canvas
       shadows
-      dpr={[1, 2]}
+      dpr={isMobile ? [1, 1.35] : [1.5, 2]}
       frameloop="always"
       gl={{
         antialias: true,
         alpha: false,
+        precision: "highp",
         powerPreference: "high-performance",
         stencil: false,
         depth: true,
@@ -38,7 +42,7 @@ export default function Scene() {
         gl.toneMappingExposure = 1.0;
         gl.outputColorSpace = THREE.SRGBColorSpace;
       }}
-      camera={{ position: [0, 2, 6], fov: 45, near: 0.1, far: 60 }}
+      camera={{ position: [0, 2, 6], fov: 45, near: 0.1, far: 900 }}
       onPointerMissed={() => {
         // Click on empty canvas → full reset: camera to overview,
         // mascot back to hub, any active hologram dismissed.

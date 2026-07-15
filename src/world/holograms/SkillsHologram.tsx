@@ -99,7 +99,7 @@ export function SkillsHologram({
   const { rootRef, plateMat, haloMat, frameMat, scanlineMat, position, rotation, accent } =
     useWallSlot("skills", intensity);
 
-  const activeSkill = SKILLS.find((s) => s.id === active) ?? SKILLS[0];
+  const activeSkill = SKILLS.find((s) => s.id === active) ?? SKILLS[0]!;
   const tabRowTotal = TAB_W * SKILLS.length + TAB_GAP * (SKILLS.length - 1);
 
   return (

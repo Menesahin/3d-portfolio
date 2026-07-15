@@ -2,6 +2,7 @@
 shape and that the ALL_TOOLS export stays in sync with the palette spec
 AND with the UiEvent discriminated union (contract).
 """
+
 from typing import get_args
 
 from app.agent import tools as t
@@ -13,11 +14,24 @@ def test_should_export_full_palette_when_inspecting_all_tools() -> None:
     # app/agent/tools.py. Drift here means an event the agent can fire is
     # invisible to the frontend (or vice versa).
     expected = {
-        "camera_focus", "camera_zoom",
-        "mascot_move_to", "mascot_orbit", "mascot_dart", "mascot_return_to_hub",
-        "mascot_gesture", "mascot_point_at", "mascot_emote", "mascot_expression",
+        "camera_focus",
+        "camera_zoom",
+        "mascot_move_to",
+        "mascot_orbit",
+        "mascot_dart",
+        "mascot_return_to_hub",
+        "mascot_gesture",
+        "mascot_point_at",
+        "mascot_emote",
+        "mascot_expression",
         "world_reset",
-        "content_experience", "content_project", "content_skill_group", "content_contact_card",
+        "cockpit_lighting",
+        "cockpit_flight_mode",
+        "cockpit_view",
+        "content_experience",
+        "content_project",
+        "content_skill_group",
+        "content_contact_card",
         "suggest_followups",
     }
     actual = {tool.name for tool in t.ALL_TOOLS}
@@ -46,11 +60,24 @@ def test_should_expose_descriptions_when_inspecting_tools() -> None:
 # Pydantic union here drifts from this set, this test fails AND the FE
 # `src/types/tools.ts` will be out of sync — fix both sides together.
 EXPECTED_UIEVENT_KINDS = {
-    "camera.focus", "camera.zoom",
-    "mascot.move", "mascot.orbit", "mascot.dart", "mascot.return_to_hub",
-    "mascot.gesture", "mascot.point_at", "mascot.emote", "mascot.expression",
+    "camera.focus",
+    "camera.zoom",
+    "mascot.move",
+    "mascot.orbit",
+    "mascot.dart",
+    "mascot.return_to_hub",
+    "mascot.gesture",
+    "mascot.point_at",
+    "mascot.emote",
+    "mascot.expression",
     "world.reset",
-    "content.experience", "content.project", "content.skill_group", "content.contact_card",
+    "cockpit.lighting",
+    "cockpit.flight_mode",
+    "cockpit.view",
+    "content.experience",
+    "content.project",
+    "content.skill_group",
+    "content.contact_card",
     "chat.suggestions",
 }
 

@@ -16,7 +16,7 @@ export const onboarding: Record<Lang, OnboardingCopy> = {
   en: {
     hint: "✨ ask me anything  ›  press /",
     greeting:
-      "Hi — I'm the little companion that lives in Enes's 3D world. I can move the scene, summon holograms, and walk you through anything about him. Pick a starter below, or type your own.",
+      "Hi — I'm Köfte, Captain Enes's tiny cockpit copilot. I can navigate his projects, flight log and engineering systems with you. Pick a console below, or ask me anything about him.",
     starter: [
       { id: "who", label: "Who is Enes?", prompt: "Who is Enes?" },
       { id: "projects", label: "Show projects", prompt: "Show me his projects" },
@@ -28,7 +28,7 @@ export const onboarding: Record<Lang, OnboardingCopy> = {
   tr: {
     hint: "✨ her şeyi sor  ›  / tuşuna bas",
     greeting:
-      "Selam — Enes'in 3D dünyasında yaşayan küçük yoldaşım. Sahneyi hareket ettirebilir, hologramlar çağırabilir ve Enes hakkında her şeyi anlatabilirim. Aşağıdan bir başlık seç, ya da kendin yaz.",
+      "Selam — ben Köfte, Kaptan Enes'in minik kokpit yardımcısıyım. Projelerini, uçuş günlüğünü ve mühendislik sistemlerini birlikte gezebiliriz. Bir konsol seç ya da Enes hakkında istediğini sor.",
     starter: [
       { id: "who", label: "Enes kim?", prompt: "Enes kim?" },
       { id: "projects", label: "Projeleri göster", prompt: "Projelerini gösterir misin?" },

@@ -18,6 +18,7 @@
  */
 
 import type { MascotGesture } from "@/types/tools";
+import { isCockpitVariant, type WorldVariant } from "@/world/worldVariant";
 
 /**
  * Maps a logical mascot signal (idle / walk / each `MascotGesture`)
@@ -38,9 +39,14 @@ export type MascotConfig = {
   hoverOffset: number;
   /** Multiplies gesture clip duration — 1.0 = native, lower = faster. */
   gestureTimeScale?: number;
+  /** Optional loop used while the assistant is streaming prose. */
+  talk?: string;
   animationMap: AnimationMap;
   emoteAnchor: [number, number, number];
 };
+
+/** Bump the query when Blender publishes a materially different Köfte GLB. */
+export const KOFTE_ASSET_URL = "/models/cockpit/kofte.glb?v=4";
 
 /**
  * RobotExpressive's clip names (per three.js repo):
@@ -50,7 +56,7 @@ export type MascotConfig = {
  * Mappings lean on obvious names; richer gestures (flip, shy, spin_happy)
  * are intentionally undefined so GlbMascot falls back to procedural cues.
  */
-export const mascotConfig: MascotConfig = {
+export const legacyMascotConfig: MascotConfig = {
   id: "robot-expressive",
   assetUrl: "/models/RobotExpressive.glb",
   scale: 0.5,
@@ -59,7 +65,6 @@ export const mascotConfig: MascotConfig = {
   animationMap: {
     idle: "Idle",
     walk: "Walking",
-    jump: "Jump",
     wave: "Wave",
     dance: "Dance",
     thumbs_up: "ThumbsUp",
@@ -67,8 +72,38 @@ export const mascotConfig: MascotConfig = {
     bow: "Sitting",
     head_tilt: "No",
     shy: "No",
+    celebrate: "Jump",
     flip: "WalkJump",
     spin_happy: "Dance",
   },
   emoteAnchor: [0, 2.4, 0],
 };
+
+/** V7 copilot authored in the KOFTE_MK2 scene and exported through Blender MCP. */
+export const kofteMascotConfig: MascotConfig = {
+  id: "kofte",
+  assetUrl: KOFTE_ASSET_URL,
+  scale: 1.05,
+  hoverOffset: 0,
+  gestureTimeScale: 1,
+  talk: "Talk",
+  animationMap: {
+    idle: "Idle",
+    walk: "HoverMove",
+    wave: "Wave",
+    point: "Point",
+    thumbs_up: "ThumbsUp",
+    head_tilt: "HeadTilt",
+    bow: "Bow",
+    dance: "Dance",
+    flip: "Flip",
+    spin_happy: "SpinHappy",
+    shy: "Shy",
+    celebrate: "Celebrate",
+  },
+  emoteAnchor: [0, 2.2, 0],
+};
+
+export function getMascotConfig(variant: WorldVariant): MascotConfig {
+  return isCockpitVariant(variant) ? kofteMascotConfig : legacyMascotConfig;
+}

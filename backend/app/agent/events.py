@@ -4,10 +4,10 @@ The union mirrors the frontend's `src/types/tools.ts`. Keeping one authoritative
 shape here lets Pydantic validate tool outputs before they reach the wire and
 lets the TypeScript side parse them via `kind` without runtime guards.
 """
+
 from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 #  Zone / value literals — must stay in sync with src/world/zones.ts
@@ -22,21 +22,50 @@ CameraZoom = Literal["close", "medium", "wide"]
 DartDirection = Literal["up", "down", "left", "right", "away"]
 
 EmoteIcon = Literal[
-    "heart", "question", "lightbulb", "sparkle", "zzz", "exclamation", "star", "note",
+    "heart",
+    "question",
+    "lightbulb",
+    "sparkle",
+    "zzz",
+    "exclamation",
+    "star",
+    "note",
+    "tear",
 ]
 MascotGesture = Literal[
-    "wave", "point", "thumbs_up", "head_tilt", "bow", "dance", "flip", "spin_happy", "shy",
+    "wave",
+    "point",
+    "thumbs_up",
+    "head_tilt",
+    "bow",
+    "dance",
+    "flip",
+    "spin_happy",
+    "shy",
+    "celebrate",
 ]
-MascotExpression = Literal["idle", "happy", "surprised", "thinking", "sad", "wink"]
+MascotExpression = Literal[
+    "idle",
+    "happy",
+    "excited",
+    "surprised",
+    "thinking",
+    "sad",
+    "wink",
+]
 
 ProjectId = Literal["vocabuddy", "shotmock", "claude-voice", "thecupxi"]
 CompanyId = Literal["nar-sistem", "formica", "ing-bank"]
 SkillGroup = Literal["ai", "backend", "frontend", "devops"]
+CockpitLightingPreset = Literal["standard", "observation", "cool", "warm", "alert", "dim"]
+CockpitFlightMode = Literal["park", "cruise", "warp"]
+CockpitViewMode = Literal["interior", "exterior"]
 
 
 # ---------------------------------------------------------------------------
 #  UiEvent — one variant per tool effect the frontend knows how to handle.
 # ---------------------------------------------------------------------------
+
 
 class CameraFocus(BaseModel):
     kind: Literal["camera.focus"] = "camera.focus"
@@ -93,6 +122,21 @@ class WorldReset(BaseModel):
     kind: Literal["world.reset"] = "world.reset"
 
 
+class CockpitLightingEvent(BaseModel):
+    kind: Literal["cockpit.lighting"] = "cockpit.lighting"
+    preset: CockpitLightingPreset
+
+
+class CockpitFlightModeEvent(BaseModel):
+    kind: Literal["cockpit.flight_mode"] = "cockpit.flight_mode"
+    mode: CockpitFlightMode
+
+
+class CockpitViewEvent(BaseModel):
+    kind: Literal["cockpit.view"] = "cockpit.view"
+    mode: CockpitViewMode
+
+
 class ContentExperience(BaseModel):
     kind: Literal["content.experience"] = "content.experience"
     company: CompanyId
@@ -138,6 +182,9 @@ UiEvent = Annotated[
         MascotEmote,
         MascotExpressionEvent,
         WorldReset,
+        CockpitLightingEvent,
+        CockpitFlightModeEvent,
+        CockpitViewEvent,
         ContentExperience,
         ContentProject,
         ContentSkillGroup,
@@ -151,6 +198,7 @@ UiEvent = Annotated[
 # ---------------------------------------------------------------------------
 #  SSE envelope events
 # ---------------------------------------------------------------------------
+
 
 class TokenEvent(BaseModel):
     type: Literal["token"] = "token"
@@ -175,6 +223,7 @@ class ErrorEvent(BaseModel):
 # ---------------------------------------------------------------------------
 #  Request model
 # ---------------------------------------------------------------------------
+
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant", "system"]

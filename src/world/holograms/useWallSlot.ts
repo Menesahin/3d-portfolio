@@ -1,9 +1,13 @@
 import { useMemo } from "react";
 import { useActiveTheme } from "@/hooks/useActiveTheme";
+import { COCKPIT_WALL_SLOTS } from "@/world/cockpit/layout";
+import { COCKPIT_V7_WALL_SLOTS } from "@/world/cockpit/v7/layout";
+import { isCockpitVariant, readWorldVariant } from "@/world/worldVariant";
 import { useHoloFade } from "./useHoloFade";
 import { WALL_SLOTS, type WallSlotId } from "./wallSlots";
 
-const WALL_BASE_SCALE = 1.7;
+const LEGACY_WALL_BASE_SCALE = 1.7;
+const COCKPIT_SCREEN_BASE_SCALE = 1.32;
 
 /**
  * Single hook that wires up everything a wall hologram needs from the
@@ -19,9 +23,20 @@ const WALL_BASE_SCALE = 1.7;
 export function useWallSlot(slotId: WallSlotId, intensity: number) {
   const theme = useActiveTheme();
   const accent = theme.palette.accent;
-  const fade = useHoloFade(intensity, accent, WALL_BASE_SCALE);
+  const variant = readWorldVariant();
+  const cockpit = isCockpitVariant(variant);
+  const fade = useHoloFade(
+    intensity,
+    accent,
+    cockpit ? COCKPIT_SCREEN_BASE_SCALE : LEGACY_WALL_BASE_SCALE,
+  );
 
-  const slot = WALL_SLOTS[slotId];
+  const slot =
+    variant === "cockpit-v7"
+      ? COCKPIT_V7_WALL_SLOTS[slotId]
+      : cockpit
+        ? COCKPIT_WALL_SLOTS[slotId]
+        : WALL_SLOTS[slotId];
   const position = useMemo<[number, number, number]>(
     () => [slot.position[0], slot.position[1], slot.position[2]],
     [slot.position],

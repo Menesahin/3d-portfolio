@@ -4,8 +4,10 @@ import { cn } from "@/lib/utils";
 import { useStore } from "@/stores";
 import type {
   CameraTarget,
+  CameraZoom,
   CompanyId,
   EmoteIcon,
+  MascotExpression,
   MascotGesture,
   ProjectId,
   SkillGroup,
@@ -27,6 +29,7 @@ const EMOTES: EmoteIcon[] = [
   "exclamation",
   "star",
   "note",
+  "tear",
 ];
 
 const GESTURES: MascotGesture[] = [
@@ -39,7 +42,19 @@ const GESTURES: MascotGesture[] = [
   "flip",
   "spin_happy",
   "shy",
+  "celebrate",
 ];
+
+const EXPRESSIONS: MascotExpression[] = [
+  "idle",
+  "happy",
+  "excited",
+  "surprised",
+  "thinking",
+  "sad",
+  "wink",
+];
+const CAMERA_ZOOMS: CameraZoom[] = ["close", "medium", "wide"];
 
 const COMPANIES: CompanyId[] = ["nar-sistem", "formica", "ing-bank"];
 const PROJECT_IDS: ProjectId[] = ["vocabuddy", "shotmock", "claude-voice", "thecupxi"];
@@ -50,12 +65,16 @@ export function DebugPanel() {
   const [collapsed, setCollapsed] = useState(false);
 
   const setCameraTarget = useStore((s) => s.setCameraTarget);
+  const setCameraZoom = useStore((s) => s.setCameraZoom);
   const moveMascotTo = useStore((s) => s.moveMascotTo);
   const setEmote = useStore((s) => s.setEmote);
   const setGesture = useStore((s) => s.setGesture);
+  const setExpression = useStore((s) => s.setExpression);
   const showContent = useStore((s) => s.showContent);
   const hideContent = useStore((s) => s.hideContent);
   const resetWorld = useStore((s) => s.resetWorld);
+  const setCockpitViewMode = useStore((s) => s.setCockpitViewMode);
+  const setCockpitFlightMode = useStore((s) => s.setCockpitFlightMode);
 
   const targets: CameraTarget[] = ["overview", ...ZONE_IDS];
 
@@ -84,6 +103,25 @@ export function DebugPanel() {
             ))}
           </Section>
 
+          <Section title="Camera zoom">
+            {CAMERA_ZOOMS.map((zoom) => (
+              <Chip key={zoom} onClick={() => setCameraZoom(zoom)}>
+                {zoom}
+              </Chip>
+            ))}
+          </Section>
+
+          <Section title="Cockpit view">
+            <Chip onClick={() => setCockpitViewMode("interior")}>interior</Chip>
+            <Chip onClick={() => setCockpitViewMode("exterior")}>exterior</Chip>
+          </Section>
+
+          <Section title="Flight mode">
+            <Chip onClick={() => setCockpitFlightMode("park")}>park</Chip>
+            <Chip onClick={() => setCockpitFlightMode("cruise")}>cruise</Chip>
+            <Chip onClick={() => setCockpitFlightMode("warp")}>warp</Chip>
+          </Section>
+
           <Section title={t.debug.moveTo}>
             {ZONE_IDS.map((z) => (
               <Chip key={z} onClick={() => moveMascotTo(z)}>
@@ -104,6 +142,14 @@ export function DebugPanel() {
             {GESTURES.map((g) => (
               <Chip key={g} onClick={() => setGesture(g)}>
                 {g}
+              </Chip>
+            ))}
+          </Section>
+
+          <Section title="Expression">
+            {EXPRESSIONS.map((expression) => (
+              <Chip key={expression} onClick={() => setExpression(expression)}>
+                {expression}
               </Chip>
             ))}
           </Section>

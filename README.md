@@ -1,6 +1,6 @@
 # 3D Portfolio
 
-A chat-driven robot mascot in a sci-fi platform. The visitor types in
+A chat-driven hover-droid copilot inside a cozy spaceship cockpit. The visitor types in
 the chat dock; the LangGraph agent replies with prose AND fires
 structured tools (camera dolly, mascot walk, hologram open, follow-up
 chips) that animate the 3D scene in real time.
@@ -11,7 +11,7 @@ chips) that animate the 3D scene in real time.
 
 ## What's on screen
 
-- **Mascot** centre stage (rigged GLB, 13 idle/gesture clips). It walks
+- **Mascot** centre stage (rigged GLB, 16 idle/gesture clips). It flies
   to wall stations when a section becomes active and turns to face the
   panel.
 - **Three walls always render** as ambient signage; the active one
@@ -39,7 +39,7 @@ chips) that animate the 3D scene in real time.
 │                          │   {messages}    │   ▼                      │
 │ useChatStream            │                 │  create_react_agent      │
 │   ▼                      │  ◄── token ─── │   ├─ ChatOpenAI          │
-│ stream.ts (SSE consumer) │  ◄── ui    ─── │   ├─ 16 tools            │
+│ stream.ts (SSE consumer) │  ◄── ui    ─── │   ├─ 18 tools            │
 │   ▼                      │  ◄── done  ─── │   │   (camera_*, mascot_*,│
 │ applyUiEvent (root       │                 │   │    content_*, suggest)│
 │  dispatcher; switch on   │                 │   └─ InMemorySaver       │
@@ -63,7 +63,7 @@ chips) that animate the 3D scene in real time.
   3 wall hologram slots, reflective floor, drei `<Sparkles>`,
   `<Lightformer>` 3-point env map. Wall holograms share `useHoloFade` +
   `useWallSlot` so adding a 4th wall type is a 2-line entry.
-- **`mascot/`** — `RobotExpressive.glb` rigged mascot. `useMascotLocomotion`
+- **`mascot/`** — custom rigged `kofte.glb` copilot. `useMascotLocomotion`
   hook owns position lerp / arrival / yaw / hover-scale per frame so
   `Mascot.tsx` itself stays a coordinator.
 - **`stores/`** — Zustand sliced state. `dispatcher.ts` is the single
@@ -78,7 +78,7 @@ chips) that animate the 3D scene in real time.
 - **`/chat` SSE endpoint** — streams `ready`, `token`, `ui`, `done`,
   `error` events. `request_id` + `thread_id` bound to structlog
   contextvars so every log line down-stream picks them up.
-- **LangGraph ReAct agent** — `create_react_agent` + 16-tool palette +
+- **LangGraph ReAct agent** — `create_react_agent` + 18-tool palette +
   in-memory checkpointer (single-instance only; bounded LRU eviction at
   256 threads).
 - **Pydantic v2 contract** — `UiEvent` discriminated union; a contract
@@ -123,6 +123,18 @@ uv run uvicorn app.main:app --reload --port 8000 --workers 1
 CORS defaults to `http://localhost:5173` and `http://127.0.0.1:5173`;
 see `backend/app/core/config.py` for the validator.
 
+Cockpit V7 is the default world. Explicit rollback URLs remain available:
+
+- `/?world=cockpit-v7` — production KEX-07 cockpit
+- `/?world=cockpit` — previous cockpit export
+- `/?world=legacy` — original showroom
+
+The authoritative Blender workspace is `art/blender/kofte-explorer-v7.blend`.
+Web exports are produced from the open workspace through Blender MCP with
+`art/blender/export_v7_web_mcp.py`; `build_assets.py` is not part of the V7
+authoring path. Run `art/blender/validate_assets.py` in Blender headless mode
+to audit node contracts, semantic controls, triangle counts, and file budgets.
+
 ---
 
 ## Deploy
@@ -144,6 +156,5 @@ second.
 
 ## Credits
 
-- Mascot: **Animated Robot** by [Quaternius](https://quaternius.com)
-  via Poly Pizza · CC-BY
+- Mascot and cockpit: custom **Köfte** Blender production assets
 - Built by [Enes Şahin](https://linkedin.com/in/menesahin)

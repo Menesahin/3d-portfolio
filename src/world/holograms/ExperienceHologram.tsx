@@ -107,7 +107,7 @@ export function ExperienceHologram({
   const { rootRef, plateMat, haloMat, frameMat, scanlineMat, position, rotation, accent } =
     useWallSlot("experience", intensity);
 
-  const activeMilestone = MILESTONES.find((m) => m.id === active) ?? MILESTONES[0];
+  const activeMilestone = MILESTONES.find((m) => m.id === active) ?? MILESTONES[0]!;
   const tabRowTotal = TAB_W * MILESTONES.length + TAB_GAP * (MILESTONES.length - 1);
 
   return (

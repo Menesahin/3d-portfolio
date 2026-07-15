@@ -53,9 +53,6 @@ export function HologramStage() {
   );
   useEffect(() => {
     if (active?.kind === "contact_card") setShownContact(active);
-    else if (active && active.kind !== "contact_card") {
-      // keep shownContact for fade-out; cleared via timeout below
-    }
   }, [active]);
 
   // Drop the remembered contact entry once enough time has passed for

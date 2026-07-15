@@ -8,7 +8,8 @@ import type { ChatMessage } from "@/stores/slices/chat";
  */
 export function findLastAssistant(messages: ChatMessage[]): ChatMessage | undefined {
   for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].role === "assistant") return messages[i];
+    const message = messages[i];
+    if (message?.role === "assistant") return message;
   }
   return undefined;
 }

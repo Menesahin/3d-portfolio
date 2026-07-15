@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const MOBILE_QUERY = "(max-width: 768px) and (pointer: coarse)";
+const MOBILE_QUERY = "(max-width: 768px)";
 
 function read(): boolean {
   if (typeof window === "undefined") return false;
@@ -8,10 +8,9 @@ function read(): boolean {
 }
 
 /**
- * `true` when the viewport is small AND the primary input is touch.
- * The pointer:coarse half rules out narrow-window desktop browsers, so a
- * desktop user resizing their window doesn't accidentally fall into a
- * mobile-only path.
+ * `true` when the viewport needs the compact camera and occlusion layout.
+ * This intentionally follows available width instead of pointer type so
+ * split-screen tablets and narrow desktop windows receive the same safe shot.
  */
 export function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = useState<boolean>(read);
