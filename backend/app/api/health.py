@@ -12,7 +12,7 @@ doesn't restart it. The probe itself stays cheap — no upstream LLM
 ping (would be slow + cost money on every probe; a startup-time smoke
 test in `lifespan` is the better place for that).
 """
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, Response, status
 
@@ -31,10 +31,16 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@router.get("/version")
+async def version() -> dict[str, str]:
+    """Expose the immutable release identifier for deployment verification."""
+    return {"commit": settings.app_version}
+
+
 @router.get("/ready")
 async def ready(
     response: Response,
-    graph: "Pregel" = Depends(get_graph),
+    graph: Annotated["Pregel", Depends(get_graph)],
 ) -> dict[str, object]:
     """Readiness probe — green only if the agent can serve a real turn."""
     checks = {

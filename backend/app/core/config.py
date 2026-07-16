@@ -75,6 +75,7 @@ class Settings(BaseSettings):
     )
 
     log_level: str = "INFO"
+    app_version: str = Field(default="dev", validation_alias=AliasChoices("APP_VERSION"))
 
     # Per-IP rate limiting on /chat. Defaults are operator-tunable via env.
     # Single-worker uvicorn → in-memory store; documented in rate_limit.py.

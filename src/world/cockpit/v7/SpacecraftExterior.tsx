@@ -37,7 +37,10 @@ function SpacecraftBody() {
       if (!mesh.isMesh) return;
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const material of materials) {
-        if (material instanceof THREE.MeshStandardMaterial && /V7EngineEmission/.test(material.name)) {
+        if (
+          material instanceof THREE.MeshStandardMaterial &&
+          /V7EngineEmission/.test(material.name)
+        ) {
           result.add(material);
         }
       }
@@ -54,7 +57,13 @@ function SpacecraftBody() {
     const vessel = vesselRef.current;
     if (!vessel) return;
     const time = state.clock.elapsedTime;
-    const thrust = !masterPower ? 0.12 : flightMode === "park" ? 0.34 : flightMode === "cruise" ? 0.78 : 1.35;
+    const thrust = !masterPower
+      ? 0.12
+      : flightMode === "park"
+        ? 0.34
+        : flightMode === "cruise"
+          ? 0.78
+          : 1.35;
     const pulse = reduceMotion ? 1 : 1 + Math.sin(time * (flightMode === "warp" ? 27 : 5.4)) * 0.08;
 
     for (const material of engineMaterials) {
@@ -66,7 +75,13 @@ function SpacecraftBody() {
       );
     }
 
-    const motion = reduceMotion ? 0 : flightMode === "warp" ? 1 : flightMode === "cruise" ? 0.45 : 0.22;
+    const motion = reduceMotion
+      ? 0
+      : flightMode === "warp"
+        ? 1
+        : flightMode === "cruise"
+          ? 0.45
+          : 0.22;
     const targetY = Math.sin(time * 0.38) * 0.18 * motion;
     const targetX = Math.sin(time * 0.21) * 0.07 * motion;
     const targetRoll = Math.sin(time * 0.27) * 0.006 * motion;
@@ -94,7 +109,13 @@ function EngineWake() {
 
   useFrame((state, dt) => {
     const time = state.clock.elapsedTime;
-    const output = !masterPower ? 0.05 : flightMode === "park" ? 0.18 : flightMode === "cruise" ? 0.66 : 1;
+    const output = !masterPower
+      ? 0.05
+      : flightMode === "park"
+        ? 0.18
+        : flightMode === "cruise"
+          ? 0.66
+          : 1;
     const pulse = reduceMotion ? 1 : 1 + Math.sin(time * (flightMode === "warp" ? 31 : 8)) * 0.12;
     for (const mesh of [portRef.current, starboardRef.current]) {
       if (!mesh) continue;
@@ -131,8 +152,20 @@ function EngineWake() {
           />
         </mesh>
       ))}
-      <pointLight position={[-5.6, 2.55, 20.8]} color="#4ce6ff" intensity={45} distance={14} decay={2} />
-      <pointLight position={[5.6, 2.55, 20.8]} color="#4ce6ff" intensity={45} distance={14} decay={2} />
+      <pointLight
+        position={[-5.6, 2.55, 20.8]}
+        color="#4ce6ff"
+        intensity={45}
+        distance={14}
+        decay={2}
+      />
+      <pointLight
+        position={[5.6, 2.55, 20.8]}
+        color="#4ce6ff"
+        intensity={45}
+        distance={14}
+        decay={2}
+      />
     </>
   );
 }

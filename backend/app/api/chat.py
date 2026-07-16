@@ -10,7 +10,7 @@ import re
 import time
 import uuid
 from collections.abc import AsyncIterator
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, Request
@@ -125,7 +125,7 @@ def _to_lc_messages(req: ChatRequest) -> list:
 async def chat(
     request: Request,
     body: ChatRequest,
-    graph: "Pregel" = Depends(get_graph),
+    graph: Annotated["Pregel", Depends(get_graph)],
 ) -> StreamingResponse:
     # Prefer the id minted by `RequestIdMiddleware` so the SSE `ready`
     # frame, the structlog binding, and the wire `X-Request-Id` header

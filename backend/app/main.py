@@ -28,6 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     configure_logging(settings.log_level)
     log.info(
         "startup",
+        version=settings.app_version,
         provider=settings.llm_provider,
         model=settings.llm_model,
         cors=settings.cors_origins,

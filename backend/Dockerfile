@@ -22,9 +22,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 
 FROM python:3.13-slim
+ARG APP_VERSION=dev
 RUN useradd -m -u 1001 app
 COPY --from=builder --chown=app:app /app /app
 ENV PATH="/app/.venv/bin:$PATH" \
+    APP_VERSION=${APP_VERSION} \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 USER app

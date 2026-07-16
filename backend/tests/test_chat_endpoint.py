@@ -55,19 +55,21 @@ async def test_should_stream_ready_token_ui_and_done_when_chat_invoked() -> None
     app.dependency_overrides[get_graph] = lambda: StubGraph()
 
     transport = ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
-        async with ac.stream(
+    async with (
+        httpx.AsyncClient(transport=transport, base_url="http://test") as ac,
+        ac.stream(
             "POST",
             "/chat",
             json={"messages": [{"role": "user", "content": "hi"}]},
-        ) as r:
-            assert r.status_code == 200
-            events: list[str] = []
-            async for line in r.aiter_lines():
-                if line.startswith("event:"):
-                    events.append(line.split(":", 1)[1].strip())
-                if '"type": "done"' in line:
-                    break
+        ) as r,
+    ):
+        assert r.status_code == 200
+        events: list[str] = []
+        async for line in r.aiter_lines():
+            if line.startswith("event:"):
+                events.append(line.split(":", 1)[1].strip())
+            if '"type": "done"' in line:
+                break
 
     app.dependency_overrides.clear()
 
@@ -86,6 +88,19 @@ async def test_should_return_200_on_health() -> None:
         r = await ac.get("/health")
     assert r.status_code == 200
     assert r.json() == {"status": "ok"}
+
+
+@pytest.mark.asyncio
+async def test_should_report_deployed_version() -> None:
+    from app.core.config import settings
+    from app.main import app
+
+    transport = ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+        r = await ac.get("/version")
+
+    assert r.status_code == 200
+    assert r.json() == {"commit": settings.app_version}
 
 
 class _ReadyStubGraph:
