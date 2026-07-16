@@ -6,77 +6,31 @@ import { useDebugMode } from "@/hooks/useDebugMode";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useStore } from "@/stores";
-import { COCKPIT_MOBILE_SHOTS, COCKPIT_SHOTS } from "./cockpit/layout";
 import { COCKPIT_V7_MOBILE_SHOTS, COCKPIT_V7_SHOTS } from "./cockpit/v7/layout";
-import { isCockpitVariant, type WorldVariant } from "./worldVariant";
-import type { ZoneId } from "./zones";
 
 /**
- * Camera rig for the wall-staged showcase.
+ * Camera rig for the KEX-07 cockpit.
  *
- * SHOTS are absolute world-space framings. The mascot walks to wall-side
- * stations on its own; the camera dollies to an over-shoulder angle that
- * frames both the mascot and the lit wall.
+ * Shots are absolute world-space framings exported from the V7 manifest.
  *
  * `world.activeContent` mirrors into `world.cameraTarget` so a chat
  * tool fire that opens a hologram also reframes the camera; an explicit
  * setCameraTarget (e.g. "overview") wins until activeContent changes.
  *
- * Mobile uses its own portrait shot table plus a wider lens (45° → 65°;
- * 72° for the panoramic cockpit),
+ * Mobile uses its own portrait shot table plus a wider 72° lens,
  * keeping destination panels centred without exposing the desktop ceiling
  * assembly or relying on a single distance multiplier for every wall.
  */
-type Offset = { pos: [number, number, number]; target: [number, number, number] };
-
-const SHOTS: Record<ZoneId | "overview" | "hub", Offset> = {
-  // Default — wide enough to see all three walls + mascot.
-  hub: { pos: [0, 4.6, 9.5], target: [0, 1.8, 0] },
-  // Wider establishing shot.
-  overview: { pos: [0, 6.0, 11.5], target: [0, 2.0, 0] },
-  // Over-shoulder → back wall (Projects).
-  gallery: { pos: [0, 4.4, 3.0], target: [0, 3.5, -9] },
-  projects: { pos: [0, 4.4, 3.0], target: [0, 3.5, -9] },
-  // Over-shoulder → left wall (Experience).
-  experience: { pos: [3.0, 4.4, 0], target: [-9, 3.5, 0] },
-  // Over-shoulder → right wall (Skills).
-  skills: { pos: [-3.0, 4.4, 0], target: [9, 3.5, 0] },
-  // Two-shot for contact: mascot at hub, panel beside its right shoulder.
-  // Camera pulled back to match the wall-shot distance (~7u) so the
-  // mascot doesn't dominate the frame; aim point sits between the two
-  // subjects so both are framed.
-  contact: { pos: [-1.2, 3.2, 7.5], target: [1.0, 1.6, 1.5] },
-};
-
-// Portrait shots are authored independently instead of multiplying every
-// desktop camera distance by one global value. Destination cameras sit lower
-// and aim at the exhibit centre; Projects is pulled far enough back for all
-// four cards to fit within the phone's narrow horizontal field of view.
-const MOBILE_SHOTS: Record<ZoneId | "overview" | "hub", Offset> = {
-  hub: { pos: [0, 5.7, 13.3], target: [0, 1.8, 0] },
-  overview: { pos: [0, 7.6, 16.1], target: [0, 2.0, 0] },
-  gallery: { pos: [0, 3.9, 9.3], target: [0, 4.3, -9] },
-  projects: { pos: [0, 3.9, 9.3], target: [0, 4.3, -9] },
-  experience: { pos: [8.6, 3.9, 0], target: [-9, 4.3, 0] },
-  skills: { pos: [-8.6, 3.9, 0], target: [9, 4.3, 0] },
-  contact: { pos: [-2.1, 3.8, 9.9], target: [1.0, 1.6, 1.5] },
-};
-
 const ZOOM_FACTORS = {
   close: 0.85,
   medium: 1.0,
   wide: 1.2,
 } as const;
 
-const FOV_DESKTOP = 45;
 const FOV_COCKPIT_DESKTOP = 56;
-// 65° vertical FOV gives roughly 33° horizontal FOV at iPhone portrait
-// aspect. Combined with the 18.3u Projects shot, that fits the ~10.5u
-// four-card wall; 55° clipped Vocabuddy and The Cup XI at the edges.
-const FOV_MOBILE = 65;
 const FOV_COCKPIT_MOBILE = 72;
 
-export function CameraRig({ variant }: { variant: WorldVariant }) {
+export function CameraRig() {
   const controlsRef = useRef<CameraControls>(null);
   const reduceMotion = usePrefersReducedMotion();
   const debug = useDebugMode();
@@ -93,17 +47,11 @@ export function CameraRig({ variant }: { variant: WorldVariant }) {
   // window-resize-induced query change, etc.).
   useEffect(() => {
     if (!(camera instanceof THREE.PerspectiveCamera)) return;
-    const desired = isMobile
-      ? isCockpitVariant(variant)
-        ? FOV_COCKPIT_MOBILE
-        : FOV_MOBILE
-      : isCockpitVariant(variant)
-        ? FOV_COCKPIT_DESKTOP
-        : FOV_DESKTOP;
+    const desired = isMobile ? FOV_COCKPIT_MOBILE : FOV_COCKPIT_DESKTOP;
     if (camera.fov === desired) return;
     camera.fov = desired;
     camera.updateProjectionMatrix();
-  }, [isMobile, camera, variant]);
+  }, [isMobile, camera]);
 
   // Mirror activeContent.kind → cameraTarget so opening a hologram (via
   // chat tool, debug panel, click) automatically reframes the camera.
@@ -123,18 +71,7 @@ export function CameraRig({ variant }: { variant: WorldVariant }) {
     const cc = controlsRef.current;
     if (!cc) return;
 
-    const shots =
-      variant === "cockpit-v7"
-        ? isMobile
-          ? COCKPIT_V7_MOBILE_SHOTS
-          : COCKPIT_V7_SHOTS
-        : variant === "cockpit"
-          ? isMobile
-            ? COCKPIT_MOBILE_SHOTS
-            : COCKPIT_SHOTS
-          : isMobile
-            ? MOBILE_SHOTS
-            : SHOTS;
+    const shots = isMobile ? COCKPIT_V7_MOBILE_SHOTS : COCKPIT_V7_SHOTS;
     const shot = shots[target] ?? shots.hub;
     const factor = ZOOM_FACTORS[zoom];
 
@@ -149,7 +86,7 @@ export function CameraRig({ variant }: { variant: WorldVariant }) {
 
     cc.smoothTime = reduceMotion ? 0 : 0.85;
     void cc.setLookAt(tx + dx, ty + dy, tz + dz, tx, ty, tz, !reduceMotion);
-  }, [target, zoom, reduceMotion, isMobile, variant]);
+  }, [target, zoom, reduceMotion, isMobile]);
 
   // Debug helper: press `c` to copy current camera pos + target as a
   // ready-to-paste SHOTS entry. Only wired while `?debug=1`.

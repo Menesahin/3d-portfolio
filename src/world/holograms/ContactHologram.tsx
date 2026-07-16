@@ -1,12 +1,8 @@
-import { Billboard, Html, Text } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
-import type * as THREE from "three";
+import { Html, Text } from "@react-three/drei";
+import { useEffect, useState } from "react";
 import { useActiveTheme } from "@/hooks/useActiveTheme";
 import { useClipboard } from "@/hooks/useClipboard";
-import { mascotPosRef } from "@/mascot/mascotPosRef";
 import { COCKPIT_V7_LAYOUT } from "@/world/cockpit/v7/layout";
-import { isCockpitVariant, readWorldVariant } from "@/world/worldVariant";
 import { HoloChrome } from "./HoloChrome";
 import {
   HOLO_ALPHA_HEADER,
@@ -57,18 +53,12 @@ export function ContactHologram({
   onDismiss: () => void;
 }) {
   const theme = useActiveTheme();
-  const variant = readWorldVariant();
-  const cockpit = isCockpitVariant(variant);
   const { rootRef, plateMat, haloMat, frameMat, scanlineMat } = useHoloFade(
     visible ? 1 : 0,
     theme.palette.accent,
-    cockpit ? 0.95 : 1.4,
+    0.95,
   );
   const [mounted, setMounted] = useState(visible);
-  // Outer group whose position we drive imperatively from `mascotPosRef`,
-  // so the panel tracks the mascot's lerped position during a walk
-  // instead of snapping to ZONES[anchor] at render time.
-  const followRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
     if (visible) {
@@ -81,16 +71,6 @@ export function ContactHologram({
     const id = window.setTimeout(() => setMounted(false), 600);
     return () => window.clearTimeout(id);
   }, [visible]);
-
-  // Sit beside the mascot at shoulder height — offset is camera-right,
-  // up by 2.0u, and pulled 0.4u toward the back wall so the panel
-  // doesn't clip the mascot silhouette in the contact close-up shot.
-  useFrame(() => {
-    const g = followRef.current;
-    if (!g || cockpit) return;
-    const p = mascotPosRef.current;
-    g.position.set(p.x + 2.4, p.y + 2.0, p.z - 0.4);
-  });
 
   if (!mounted) return null;
 
@@ -164,24 +144,10 @@ export function ContactHologram({
     </group>
   );
 
-  if (cockpit) {
-    const screen =
-      variant === "cockpit-v7"
-        ? COCKPIT_V7_LAYOUT.screens.contact
-        : {
-            position: [4.49, 2.25, 6.03] as [number, number, number],
-            rotation: [0, -0.16, 0] as [number, number, number],
-          };
-    return (
-      <group position={screen.position} rotation={screen.rotation}>
-        <group position={variant === "cockpit-v7" ? [1.25, 0, 0.9] : [0, 0, 0]}>{panel}</group>
-      </group>
-    );
-  }
-
+  const screen = COCKPIT_V7_LAYOUT.screens.contact;
   return (
-    <group ref={followRef}>
-      <Billboard follow>{panel}</Billboard>
+    <group position={screen.position} rotation={screen.rotation}>
+      <group position={[1.25, 0, 0.9]}>{panel}</group>
     </group>
   );
 }

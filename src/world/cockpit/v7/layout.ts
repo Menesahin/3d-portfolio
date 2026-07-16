@@ -1,7 +1,11 @@
 import type { CameraTarget } from "@/types/tools";
 import type { ZoneId } from "@/world/zones";
-import type { CockpitShotTable } from "../layout";
 import generatedLayout from "./cockpit-v7-layout.json";
+
+export type CockpitShotTable = Record<
+  CameraTarget,
+  { pos: [number, number, number]; target: [number, number, number] }
+>;
 
 export type CockpitV7ControlKind = "button" | "rocker" | "cover" | "guarded" | "dial" | "lever";
 

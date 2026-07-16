@@ -4,12 +4,11 @@ import type * as THREE from "three";
 import { useHover } from "@/hooks/useHover";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useStore } from "@/stores";
-import { isCockpitVariant, type WorldVariant } from "@/world/worldVariant";
 import { Emote } from "./Emote";
 import { getEmotionChoreography } from "./emotionChoreography";
 import { GlbMascot } from "./GlbMascot";
 import { KofteThrusterTrail } from "./KofteThrusterTrail";
-import { getMascotConfig } from "./MascotConfig";
+import { kofteMascotConfig } from "./MascotConfig";
 import { ProceduralMascot } from "./ProceduralMascot";
 import { useMascotLocomotion } from "./useMascotLocomotion";
 
@@ -30,19 +29,18 @@ const HOVER_COOLDOWN_MS = 4000;
  * `useMascotLocomotion` hook so this component stays a coordinator
  * (gesture choreography + click + delegating render).
  */
-export function Mascot({ variant }: { variant: WorldVariant }) {
+export function Mascot() {
   const group = useRef<THREE.Group>(null);
   const reduceMotion = usePrefersReducedMotion();
   const hover = useHover();
   const lastHoverGestureAt = useRef(0);
-  const mascotConfig = getMascotConfig(variant);
+  const mascotConfig = kofteMascotConfig;
   const expression = useStore((s) => s.mascot.expression);
 
   useMascotLocomotion({
     groupRef: group,
     hovered: hover.hovered,
     hoverOffset: mascotConfig.hoverOffset,
-    variant,
   });
 
   const handleMascotClick = (e: ThreeEvent<MouseEvent>) => {
@@ -105,7 +103,7 @@ export function Mascot({ variant }: { variant: WorldVariant }) {
       ) : (
         <ProceduralMascot />
       )}
-      {isCockpitVariant(variant) && <KofteThrusterTrail />}
+      <KofteThrusterTrail />
       <Emote anchor={mascotConfig.emoteAnchor} />
     </group>
   );

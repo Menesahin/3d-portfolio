@@ -123,17 +123,15 @@ uv run uvicorn app.main:app --reload --port 8000 --workers 1
 CORS defaults to `http://localhost:5173` and `http://127.0.0.1:5173`;
 see `backend/app/core/config.py` for the validator.
 
-Cockpit V7 is the default world. Explicit rollback URLs remain available:
-
-- `/?world=cockpit-v7` — production KEX-07 cockpit
-- `/?world=cockpit` — previous cockpit export
-- `/?world=legacy` — original showroom
+KEX-07 Cockpit V7 is the single production world and loads directly at `/`.
+Its interior and exterior spacecraft compositions are switched from the
+in-world controls or the `INT VIEW` / `EXT VIEW` toggle.
 
 The authoritative Blender workspace is `art/blender/kofte-explorer-v7.blend`.
 Web exports are produced from the open workspace through Blender MCP with
-`art/blender/export_v7_web_mcp.py`; `build_assets.py` is not part of the V7
-authoring path. Run `art/blender/validate_assets.py` in Blender headless mode
-to audit node contracts, semantic controls, triangle counts, and file budgets.
+`art/blender/export_v7_web_mcp.py`. Run `art/blender/validate_assets.py` in
+Blender headless mode to audit node contracts, semantic controls, triangle
+counts, and file budgets.
 
 ---
 

@@ -8,7 +8,6 @@ import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/stores";
 import type { Suggestion } from "@/types/tools";
-import { isCockpitVariant, readWorldVariant } from "@/world/worldVariant";
 
 /**
  * Twitch-style floating chat overlay — no containing plate. Messages
@@ -35,7 +34,7 @@ export function ChatDock() {
   const finishStreaming = useStore((s) => s.finishStreaming);
   const activeContent = useStore((s) => s.world.activeContent);
   const isMobile = useIsMobile();
-  const compactCockpit = isMobile && isCockpitVariant(readWorldVariant());
+  const compactCockpit = isMobile;
   const { isFirstVisit } = useFirstVisit();
   const { send, stop, isStreaming } = useChatStream();
 

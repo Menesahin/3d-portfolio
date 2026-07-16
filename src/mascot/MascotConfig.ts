@@ -6,19 +6,10 @@
  *     `animationMap` clip names to our logical states (idle / walk / ...).
  *   - Otherwise, it renders a small procedural placeholder robot.
  *
- * v1 ships with the three.js reference `RobotExpressive.glb` — made by the
- * three.js team for their animation demos, 13 rigged clips, ~450 KB. MIT
- * license (three.js repo). Swap to any other rigged GLB by changing the
- * fields below; no component code needs to change.
- *
- * To try another model (e.g. Quaternius Animated Robot):
- *   1. Drop the GLB in `public/models/`.
- *   2. Update `assetUrl`, `scale`, `hoverOffset`, `animationMap`.
- *   3. Inspect clip names with `npx gltfjsx public/models/xyz.glb --debug`.
+ * KEX-07 has one production mascot: the custom Köfte Blender export.
  */
 
 import type { MascotGesture } from "@/types/tools";
-import { isCockpitVariant, type WorldVariant } from "@/world/worldVariant";
 
 /**
  * Maps a logical mascot signal (idle / walk / each `MascotGesture`)
@@ -48,37 +39,6 @@ export type MascotConfig = {
 /** Bump the query when Blender publishes a materially different Köfte GLB. */
 export const KOFTE_ASSET_URL = "/models/cockpit/kofte.glb?v=4";
 
-/**
- * RobotExpressive's clip names (per three.js repo):
- *   Idle · Walking · Running · Dance · Death · Sitting · Standing · Jump
- *   Wave · ThumbsUp · No · Yes · Punch
- *
- * Mappings lean on obvious names; richer gestures (flip, shy, spin_happy)
- * are intentionally undefined so GlbMascot falls back to procedural cues.
- */
-export const legacyMascotConfig: MascotConfig = {
-  id: "robot-expressive",
-  assetUrl: "/models/RobotExpressive.glb",
-  scale: 0.5,
-  hoverOffset: 0,
-  gestureTimeScale: 1.0,
-  animationMap: {
-    idle: "Idle",
-    walk: "Walking",
-    wave: "Wave",
-    dance: "Dance",
-    thumbs_up: "ThumbsUp",
-    point: "Yes",
-    bow: "Sitting",
-    head_tilt: "No",
-    shy: "No",
-    celebrate: "Jump",
-    flip: "WalkJump",
-    spin_happy: "Dance",
-  },
-  emoteAnchor: [0, 2.4, 0],
-};
-
 /** V7 copilot authored in the KOFTE_MK2 scene and exported through Blender MCP. */
 export const kofteMascotConfig: MascotConfig = {
   id: "kofte",
@@ -103,7 +63,3 @@ export const kofteMascotConfig: MascotConfig = {
   },
   emoteAnchor: [0, 2.2, 0],
 };
-
-export function getMascotConfig(variant: WorldVariant): MascotConfig {
-  return isCockpitVariant(variant) ? kofteMascotConfig : legacyMascotConfig;
-}

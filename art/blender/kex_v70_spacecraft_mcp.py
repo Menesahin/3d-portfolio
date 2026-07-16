@@ -701,7 +701,7 @@ SCENE["kex_floor_area_original"] = 18.8 * 17.2
 SCENE["kex_floor_area_v7"] = 26.6 * 24.3
 SCENE["kex_ship_class"] = "Kofte Explorer orbital research vessel"
 
-bpy.ops.wm.save_as_mainfile(filepath="/Users/muhammedenessahin/Desktop/Dev/personalwebsite/art/blender/kofte-explorer.blend")
+bpy.ops.wm.save_as_mainfile(filepath="/Users/muhammedenessahin/Desktop/Dev/personalwebsite/art/blender/kofte-explorer-v7.blend")
 result = {
     "version": SCENE["kex_cockpit_version"],
     "floor_area_multiplier": round(SCENE["kex_floor_area_v7"] / SCENE["kex_floor_area_original"], 3),

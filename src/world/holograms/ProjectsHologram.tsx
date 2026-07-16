@@ -1,38 +1,12 @@
 import { Html, Text } from "@react-three/drei";
-import type * as THREE from "three";
 import { getContent } from "@/content/portfolio";
-import { useHover } from "@/hooks/useHover";
 import { useStore } from "@/stores";
 import type { ProjectId } from "@/types/tools";
 import { ORBIT_ALTITUDE_KM, ORBIT_PERIOD_SECONDS, ORBIT_SPEED_KM_S } from "@/world/cockpit/orbit";
-import { isCockpitVariant, readWorldVariant } from "@/world/worldVariant";
 import { HoloChrome } from "./HoloChrome";
 import { ProjectThumb } from "./ProjectThumb";
-import {
-  HOLO_ALPHA_HEADER,
-  HOLO_ALPHA_SUBTITLE,
-  HOLO_BULLET_GAP,
-  HOLO_COLOR_BODY,
-  HOLO_COLOR_SOFT,
-  HOLO_FONT_BODY,
-  HOLO_FONT_HEADER,
-  HOLO_FONT_SUBTITLE,
-  HOLO_FONT_TITLE,
-  HOLO_LETTER_HEADER,
-} from "./tokens";
+import { HOLO_COLOR_BODY, HOLO_COLOR_SOFT } from "./tokens";
 import { useWallSlot } from "./useWallSlot";
-
-const CARD_W = 1.4;
-const CARD_H = 2.05;
-const THUMB_W = 1.26;
-const THUMB_H = 0.7;
-// Four-card layout — even spacing, ~0.15u between edges.
-const CARD_XS: Record<ProjectId, number> = {
-  vocabuddy: -2.4,
-  shotmock: -0.8,
-  "claude-voice": 0.8,
-  thecupxi: 2.4,
-};
 
 const PROJECTS: ReadonlyArray<{
   id: ProjectId;
@@ -106,245 +80,111 @@ export function ProjectsHologram({
   const activeLinkHref = activeCard?.link?.href;
   const isActiveSection = intensity > 0.6;
 
-  if (isCockpitVariant(readWorldVariant())) {
-    const cockpitProject = PROJECTS.find((project) => project.id === active) ?? PROJECTS[0]!;
-    const tabXs = [-2.52, -0.84, 0.84, 2.52] as const;
-
-    return (
-      <group position={position} rotation={rotation}>
-        <group ref={rootRef}>
-          <HoloChrome
-            width={6.72}
-            height={2.38}
-            plateMat={plateMat}
-            haloMat={haloMat}
-            frameMat={frameMat}
-            scanlineMat={scanlineMat}
-          />
-
-          <Text
-            position={[-3.08, 1.03, 0.018]}
-            fontSize={0.105}
-            color={accent}
-            anchorX="left"
-            anchorY="middle"
-            fontWeight={700}
-            letterSpacing={0.14}
-          >
-            PROJECT OPS / ACTIVE BUILD
-          </Text>
-          <Text
-            position={[3.08, 1.03, 0.018]}
-            fontSize={0.062}
-            color="#9DB8BD"
-            anchorX="right"
-            anchorY="middle"
-            letterSpacing={0.055}
-          >
-            {`MEO ${ORBIT_ALTITUDE_KM.toLocaleString("en-US")} KM · ${ORBIT_SPEED_KM_S.toFixed(2)} KM/S · ${(ORBIT_PERIOD_SECONDS / 60).toFixed(0)} MIN`}
-          </Text>
-
-          <group position={[-1.93, 0.1, 0.018]}>
-            <ProjectThumb
-              projectId={cockpitProject.id}
-              title={cockpitProject.title}
-              width={2.45}
-              height={1.42}
-              opacity={1}
-            />
-            <mesh position={[0, -0.82, 0]} material={frameMat}>
-              <planeGeometry args={[2.45, 0.018]} />
-            </mesh>
-            <Text
-              position={[-1.2, -0.95, 0.012]}
-              fontSize={0.08}
-              color="#9DB8BD"
-              anchorX="left"
-              anchorY="middle"
-              letterSpacing={0.08}
-            >
-              VISUAL FEED · VERIFIED
-            </Text>
-          </group>
-
-          <Text
-            position={[-0.48, 0.7, 0.02]}
-            fontSize={0.17}
-            color={accent}
-            anchorX="left"
-            anchorY="middle"
-            fontWeight={700}
-            maxWidth={3.35}
-          >
-            {cockpitProject.title}
-          </Text>
-          <Text
-            position={[-0.48, 0.49, 0.02]}
-            fontSize={0.085}
-            color={HOLO_COLOR_SOFT}
-            fillOpacity={0.78}
-            anchorX="left"
-            anchorY="middle"
-            letterSpacing={0.08}
-          >
-            {cockpitProject.subtitle.toUpperCase()}
-          </Text>
-          <mesh position={[1.26, 0.35, 0.012]} material={frameMat}>
-            <planeGeometry args={[3.48, 0.01]} />
-          </mesh>
-
-          {cockpitProject.bullets.map((bullet, index) => (
-            <Text
-              key={`${cockpitProject.id}-cockpit-${bullet}`}
-              position={[-0.48, 0.17 - index * 0.25, 0.02]}
-              fontSize={0.1}
-              color={HOLO_COLOR_BODY}
-              fillOpacity={0.9}
-              anchorX="left"
-              anchorY="middle"
-              maxWidth={3.5}
-              lineHeight={1.25}
-            >
-              {`▸ ${bullet}`}
-            </Text>
-          ))}
-
-          {isActiveSection && activeLinkHref ? (
-            <Html
-              position={[2.42, -0.62, 0.035]}
-              transform
-              center
-              occlude={false}
-              distanceFactor={3}
-              style={{ pointerEvents: "auto" }}
-            >
-              <a
-                href={activeLinkHref}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="holo-open-link"
-              >
-                Launch project ↗
-              </a>
-            </Html>
-          ) : (
-            <Text
-              position={[2.94, -0.62, 0.02]}
-              fontSize={0.075}
-              color="#D6A36C"
-              anchorX="right"
-              anchorY="middle"
-              letterSpacing={0.1}
-            >
-              LOCAL BUILD
-            </Text>
-          )}
-
-          {PROJECTS.map((project, index) => {
-            const selected = project.id === active;
-            return (
-              <group key={`${project.id}-cockpit-tab`} position={[tabXs[index] ?? 0, -1.0, 0.03]}>
-                <mesh
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    showContent({ kind: "project", project: project.id });
-                  }}
-                  onPointerOver={(event) => {
-                    event.stopPropagation();
-                    document.body.style.cursor = "pointer";
-                  }}
-                  onPointerOut={() => {
-                    document.body.style.cursor = "";
-                  }}
-                >
-                  <planeGeometry args={[1.5, 0.25]} />
-                  <meshBasicMaterial
-                    color={selected ? accent : "#122229"}
-                    transparent
-                    opacity={selected ? 0.34 : 0.7}
-                    depthWrite={false}
-                  />
-                </mesh>
-                <Text
-                  position={[0, 0, 0.012]}
-                  fontSize={0.078}
-                  color={selected ? "#EAF8F8" : "#8FA6AA"}
-                  anchorX="center"
-                  anchorY="middle"
-                  fontWeight={selected ? 700 : 500}
-                  letterSpacing={0.06}
-                >
-                  {project.title.toUpperCase()}
-                </Text>
-              </group>
-            );
-          })}
-
-          <Text
-            position={[3.08, -0.79, 0.02]}
-            fontSize={0.06}
-            color={flightMode === "warp" ? "#FF826F" : "#7ED9E5"}
-            anchorX="right"
-            anchorY="middle"
-            letterSpacing={0.055}
-            maxWidth={3.7}
-          >
-            {`${flightMode.toUpperCase()} · ${cockpitStatus}`}
-          </Text>
-
-          <mesh
-            position={[0, 0, -0.05]}
-            onClick={(event) => {
-              event.stopPropagation();
-              onDismiss();
-            }}
-          >
-            <planeGeometry args={[6.72, 2.38]} />
-            <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-          </mesh>
-        </group>
-      </group>
-    );
-  }
+  const cockpitProject = PROJECTS.find((project) => project.id === active) ?? PROJECTS[0]!;
+  const tabXs = [-2.52, -0.84, 0.84, 2.52] as const;
 
   return (
     <group position={position} rotation={rotation}>
       <group ref={rootRef}>
-        {/* Header strip. */}
+        <HoloChrome
+          width={6.72}
+          height={2.38}
+          plateMat={plateMat}
+          haloMat={haloMat}
+          frameMat={frameMat}
+          scanlineMat={scanlineMat}
+        />
+
         <Text
-          position={[0, CARD_H / 2 + 0.22, 0.01]}
-          fontSize={HOLO_FONT_HEADER}
+          position={[-3.08, 1.03, 0.018]}
+          fontSize={0.105}
           color={accent}
-          anchorX="center"
+          anchorX="left"
           anchorY="middle"
           fontWeight={700}
-          fillOpacity={HOLO_ALPHA_HEADER}
-          letterSpacing={HOLO_LETTER_HEADER}
+          letterSpacing={0.14}
         >
-          PROJECTS · {PROJECTS.length} LIVE
+          PROJECT OPS / ACTIVE BUILD
+        </Text>
+        <Text
+          position={[3.08, 1.03, 0.018]}
+          fontSize={0.062}
+          color="#9DB8BD"
+          anchorX="right"
+          anchorY="middle"
+          letterSpacing={0.055}
+        >
+          {`MEO ${ORBIT_ALTITUDE_KM.toLocaleString("en-US")} KM · ${ORBIT_SPEED_KM_S.toFixed(2)} KM/S · ${(ORBIT_PERIOD_SECONDS / 60).toFixed(0)} MIN`}
         </Text>
 
-        {PROJECTS.map((p) => (
-          <ProjectCard
-            key={p.id}
-            project={p}
-            x={CARD_XS[p.id]}
-            isActive={p.id === active}
-            plateMat={plateMat}
-            haloMat={haloMat}
-            frameMat={frameMat}
-            scanlineMat={scanlineMat}
-            accent={accent}
-            onSelect={() => showContent({ kind: "project", project: p.id })}
+        <group position={[-1.93, 0.1, 0.018]}>
+          <ProjectThumb
+            projectId={cockpitProject.id}
+            title={cockpitProject.title}
+            width={2.45}
+            height={1.42}
+            opacity={1}
           />
+          <mesh position={[0, -0.82, 0]} material={frameMat}>
+            <planeGeometry args={[2.45, 0.018]} />
+          </mesh>
+          <Text
+            position={[-1.2, -0.95, 0.012]}
+            fontSize={0.08}
+            color="#9DB8BD"
+            anchorX="left"
+            anchorY="middle"
+            letterSpacing={0.08}
+          >
+            VISUAL FEED · VERIFIED
+          </Text>
+        </group>
+
+        <Text
+          position={[-0.48, 0.7, 0.02]}
+          fontSize={0.17}
+          color={accent}
+          anchorX="left"
+          anchorY="middle"
+          fontWeight={700}
+          maxWidth={3.35}
+        >
+          {cockpitProject.title}
+        </Text>
+        <Text
+          position={[-0.48, 0.49, 0.02]}
+          fontSize={0.085}
+          color={HOLO_COLOR_SOFT}
+          fillOpacity={0.78}
+          anchorX="left"
+          anchorY="middle"
+          letterSpacing={0.08}
+        >
+          {cockpitProject.subtitle.toUpperCase()}
+        </Text>
+        <mesh position={[1.26, 0.35, 0.012]} material={frameMat}>
+          <planeGeometry args={[3.48, 0.01]} />
+        </mesh>
+
+        {cockpitProject.bullets.map((bullet, index) => (
+          <Text
+            key={`${cockpitProject.id}-cockpit-${bullet}`}
+            position={[-0.48, 0.17 - index * 0.25, 0.02]}
+            fontSize={0.1}
+            color={HOLO_COLOR_BODY}
+            fillOpacity={0.9}
+            anchorX="left"
+            anchorY="middle"
+            maxWidth={3.5}
+            lineHeight={1.25}
+          >
+            {`▸ ${bullet}`}
+          </Text>
         ))}
 
-        {/* Open-live button — DOM anchor pinned below the active card.
-            Only rendered when this section is the active one; otherwise
-            an idle wall would have a stale clickable button. */}
-        {isActiveSection && activeLinkHref && (
+        {isActiveSection && activeLinkHref ? (
           <Html
-            position={[CARD_XS[active], -CARD_H / 2 - 0.18, 0.02]}
+            position={[2.42, -0.62, 0.035]}
             transform
             center
             occlude={false}
@@ -357,132 +197,84 @@ export function ProjectsHologram({
               rel="noreferrer noopener"
               className="holo-open-link"
             >
-              Open live ↗
+              Launch project ↗
             </a>
           </Html>
+        ) : (
+          <Text
+            position={[2.94, -0.62, 0.02]}
+            fontSize={0.075}
+            color="#D6A36C"
+            anchorX="right"
+            anchorY="middle"
+            letterSpacing={0.1}
+          >
+            LOCAL BUILD
+          </Text>
         )}
 
-        {/* Dismiss hit-plane behind everything. */}
+        {PROJECTS.map((project, index) => {
+          const selected = project.id === active;
+          return (
+            <group key={`${project.id}-cockpit-tab`} position={[tabXs[index] ?? 0, -1.0, 0.03]}>
+              <mesh
+                onClick={(event) => {
+                  event.stopPropagation();
+                  showContent({ kind: "project", project: project.id });
+                }}
+                onPointerOver={(event) => {
+                  event.stopPropagation();
+                  document.body.style.cursor = "pointer";
+                }}
+                onPointerOut={() => {
+                  document.body.style.cursor = "";
+                }}
+              >
+                <planeGeometry args={[1.5, 0.25]} />
+                <meshBasicMaterial
+                  color={selected ? accent : "#122229"}
+                  transparent
+                  opacity={selected ? 0.34 : 0.7}
+                  depthWrite={false}
+                />
+              </mesh>
+              <Text
+                position={[0, 0, 0.012]}
+                fontSize={0.078}
+                color={selected ? "#EAF8F8" : "#8FA6AA"}
+                anchorX="center"
+                anchorY="middle"
+                fontWeight={selected ? 700 : 500}
+                letterSpacing={0.06}
+              >
+                {project.title.toUpperCase()}
+              </Text>
+            </group>
+          );
+        })}
+
+        <Text
+          position={[3.08, -0.79, 0.02]}
+          fontSize={0.06}
+          color={flightMode === "warp" ? "#FF826F" : "#7ED9E5"}
+          anchorX="right"
+          anchorY="middle"
+          letterSpacing={0.055}
+          maxWidth={3.7}
+        >
+          {`${flightMode.toUpperCase()} · ${cockpitStatus}`}
+        </Text>
+
         <mesh
-          position={[0, 0, -0.04]}
-          onClick={(e) => {
-            e.stopPropagation();
+          position={[0, 0, -0.05]}
+          onClick={(event) => {
+            event.stopPropagation();
             onDismiss();
           }}
         >
-          <planeGeometry args={[6.6, CARD_H + 0.6]} />
+          <planeGeometry args={[6.72, 2.38]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
-      </group>
-    </group>
-  );
-}
-
-function ProjectCard({
-  project: p,
-  x,
-  isActive,
-  plateMat,
-  haloMat,
-  frameMat,
-  scanlineMat,
-  accent,
-  onSelect,
-}: {
-  project: (typeof PROJECTS)[number];
-  x: number;
-  isActive: boolean;
-  plateMat: THREE.MeshBasicMaterial;
-  haloMat: THREE.MeshBasicMaterial;
-  frameMat: THREE.MeshBasicMaterial;
-  scanlineMat: THREE.ShaderMaterial;
-  accent: string;
-  onSelect: () => void;
-}) {
-  const hover = useHover();
-  // Constant per render — no opacityRef multiplication so text renders
-  // at semantic brightness without waiting on a follow-up re-render.
-  const alpha = isActive ? 1 : 0.55;
-  const scale = isActive ? 1.08 : hover.hovered ? 1.03 : 1;
-  const z = isActive ? 0.05 : 0;
-
-  return (
-    <group position={[x, 0, z]} scale={scale}>
-      <group
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!isActive) onSelect();
-        }}
-        onPointerOver={hover.onPointerOver}
-        onPointerOut={hover.onPointerOut}
-      >
-        <HoloChrome
-          width={CARD_W}
-          height={CARD_H}
-          plateMat={plateMat}
-          haloMat={haloMat}
-          frameMat={frameMat}
-          scanlineMat={scanlineMat}
-        />
-
-        {/* Thumbnail */}
-        <group position={[0, CARD_H / 2 - THUMB_H / 2 - 0.16, 0.01]}>
-          <ProjectThumb
-            projectId={p.id}
-            title={p.title}
-            width={THUMB_W}
-            height={THUMB_H}
-            opacity={alpha}
-          />
-        </group>
-
-        {/* Title */}
-        <Text
-          position={[0, CARD_H / 2 - THUMB_H - 0.32, 0.01]}
-          fontSize={HOLO_FONT_TITLE}
-          color={accent}
-          anchorX="center"
-          anchorY="middle"
-          fontWeight={700}
-          fillOpacity={alpha}
-          maxWidth={CARD_W - 0.14}
-        >
-          {p.title}
-        </Text>
-
-        {/* Subtitle */}
-        <Text
-          position={[0, CARD_H / 2 - THUMB_H - 0.48, 0.01]}
-          fontSize={HOLO_FONT_SUBTITLE}
-          color={HOLO_COLOR_SOFT}
-          fillOpacity={HOLO_ALPHA_SUBTITLE * alpha}
-          anchorX="center"
-          anchorY="middle"
-        >
-          {p.subtitle}
-        </Text>
-
-        {/* Divider */}
-        <mesh position={[0, CARD_H / 2 - THUMB_H - 0.6, 0.008]} material={frameMat}>
-          <planeGeometry args={[CARD_W * 0.82, 0.006]} />
-        </mesh>
-
-        {/* Bullets */}
-        {p.bullets.map((b, i) => (
-          <Text
-            key={`${p.id}-b-${i}`}
-            position={[-CARD_W / 2 + 0.1, CARD_H / 2 - THUMB_H - 0.78 - i * HOLO_BULLET_GAP, 0.01]}
-            fontSize={HOLO_FONT_BODY}
-            color={HOLO_COLOR_BODY}
-            fillOpacity={0.94 * alpha}
-            anchorX="left"
-            anchorY="middle"
-            maxWidth={CARD_W - 0.2}
-            lineHeight={1.3}
-          >
-            {`› ${b}`}
-          </Text>
-        ))}
       </group>
     </group>
   );

@@ -15,11 +15,6 @@ vi.mock("@/hooks/useIsMobile", () => ({ useIsMobile: () => testFlags.isMobile })
 vi.mock("@/hooks/useT", () => ({
   useT: () => ({ chat: { placeholder: "Ask me about Enes…", stop: "Stop", send: "Send" } }),
 }));
-vi.mock("@/world/worldVariant", () => ({
-  readWorldVariant: () => "cockpit-v7",
-  isCockpitVariant: () => true,
-}));
-
 describe("ChatDock presentation mode", () => {
   beforeEach(() => {
     testFlags.isMobile = false;

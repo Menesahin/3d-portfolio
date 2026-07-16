@@ -1,6 +1,6 @@
-"""Validate the generated Köfte and cockpit GLBs with Blender.
+"""Validate the production Köfte and KEX-07 GLBs with Blender.
 
-Run after ``build_assets.py``:
+Run after ``export_v7_web_mcp.py``:
 
     blender --background --python art/blender/validate_assets.py
 
@@ -72,19 +72,8 @@ KOFTE_REQUIRED_ACTIONS = {
     "Celebrate",
     "Sleep",
 }
-COCKPIT_REQUIRED_NODES = {
-    "Cockpit_Root",
-    "Socket_Hub",
-    "Socket_Projects",
-    "Socket_Experience",
-    "Socket_Skills",
-    "Socket_Contact",
-    "Cockpit_ObservationFrame",
-    "Cockpit_ObservationGasket",
-    "MobileOccluder_CeilingShell",
-}
-FILE_BUDGETS = {"kofte.glb": 1_600_000, "cockpit.glb": 2_500_000}
-TRIANGLE_BUDGETS = {"kofte.glb": 26_000, "cockpit.glb": 45_000}
+FILE_BUDGETS = {"kofte.glb": 1_600_000}
+TRIANGLE_BUDGETS = {"kofte.glb": 26_000}
 V7_FILE_BUDGETS = {
     "cockpit-v7-shell.glb": 5_000_000,
     "cockpit-v7-controls.glb": 1_100_000,
@@ -175,52 +164,6 @@ def validate_kofte() -> dict[str, object]:
     }
 
 
-def validate_cockpit() -> dict[str, object]:
-    path = MODEL_DIR / "cockpit.glb"
-    validate_file_budget(path)
-    reset_scene()
-    import_glb(path)
-    nodes = {obj.name for obj in bpy.context.scene.objects}
-    missing_nodes = sorted(COCKPIT_REQUIRED_NODES - nodes)
-    mobile_occluders = sorted(name for name in nodes if name.startswith("MobileOccluder_"))
-    triangles = triangle_count()
-    if missing_nodes:
-        raise ValidationError(f"cockpit.glb missing nodes: {missing_nodes}")
-    if len(mobile_occluders) < 5:
-        raise ValidationError("cockpit.glb needs mobile-safe removable ceiling/window nodes")
-    if triangles > TRIANGLE_BUDGETS[path.name]:
-        raise ValidationError(f"cockpit.glb has {triangles} triangles")
-    return {
-        "file": str(path.relative_to(ROOT)),
-        "bytes": path.stat().st_size,
-        "triangles": triangles,
-        "objects": len(nodes),
-        "materials": len(bpy.data.materials),
-        "mobileOccluders": len(mobile_occluders),
-    }
-
-
-def validate_layout() -> dict[str, object]:
-    path = MODEL_DIR / "cockpit-layout.json"
-    if not path.is_file():
-        raise ValidationError(f"Missing layout manifest: {path}")
-    payload = json.loads(path.read_text())
-    expected_zones = {"hub", "projects", "experience", "skills", "contact"}
-    sockets = set(payload.get("sockets", {}))
-    if sockets != expected_zones:
-        raise ValidationError(f"layout socket mismatch: {sorted(sockets)}")
-    for breakpoint in ("desktop", "mobile"):
-        shots = set(payload.get("shots", {}).get(breakpoint, {}))
-        if shots != expected_zones | {"overview"}:
-            raise ValidationError(f"layout {breakpoint} shot mismatch: {sorted(shots)}")
-    return {
-        "file": str(path.relative_to(ROOT)),
-        "version": payload.get("version"),
-        "desktopShots": len(payload["shots"]["desktop"]),
-        "mobileShots": len(payload["shots"]["mobile"]),
-    }
-
-
 def validate_v7_glb(filename: str) -> dict[str, object]:
     path = MODEL_DIR / "v7" / filename
     if not path.is_file():
@@ -286,8 +229,6 @@ def validate_v7_layout() -> dict[str, object]:
 def main() -> None:
     report = {
         "kofte": validate_kofte(),
-        "cockpit": validate_cockpit(),
-        "layout": validate_layout(),
         "v7Shell": validate_v7_glb("cockpit-v7-shell.glb"),
         "v7Controls": validate_v7_glb("cockpit-v7-controls.glb"),
         "v7Exterior": validate_v7_glb("kofte-explorer-v7-exterior.glb"),

@@ -15,7 +15,6 @@ const BODY_TINT_STRENGTH = 0;
 type Props = { config: MascotConfig & { assetUrl: string } };
 
 // Preload at module scope — the GLB fetches while the route JS evaluates.
-useGLTF.preload("/models/RobotExpressive.glb");
 useGLTF.preload(KOFTE_ASSET_URL);
 
 /**

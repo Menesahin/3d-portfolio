@@ -4,14 +4,10 @@ import * as THREE from "three";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useStore } from "@/stores";
-import { COCKPIT_MASCOT_FACE_TARGETS, COCKPIT_MASCOT_POSITIONS } from "@/world/cockpit/layout";
 import {
   COCKPIT_V7_MASCOT_FACE_TARGETS,
   COCKPIT_V7_MASCOT_POSITIONS,
 } from "@/world/cockpit/v7/layout";
-import { MASCOT_STATIONS, type MascotStationId } from "@/world/holograms/wallSlots";
-import { isCockpitVariant, type WorldVariant } from "@/world/worldVariant";
-import { ZONES, type ZoneId } from "@/world/zones";
 import { mascotPosRef } from "./mascotPosRef";
 
 const POSITION_RATE = 1.5; // exp time-constant ≈ 0.67 s — reads as deliberate stroll
@@ -19,39 +15,6 @@ const YAW_RATE = 1.8; // ~0.55 s — finishes turning slightly before walk settl
 const HOVER_SCALE_RATE = 6;
 const HOVER_SCALE_TARGET = 1.04;
 const ARRIVAL_DIST_SQ = 0.04;
-
-function cockpitPosition(variant: WorldVariant, zone: ZoneId): readonly [number, number, number] {
-  return variant === "cockpit-v7"
-    ? COCKPIT_V7_MASCOT_POSITIONS[zone]
-    : COCKPIT_MASCOT_POSITIONS[zone];
-}
-
-function cockpitFaceTarget(variant: WorldVariant, zone: ZoneId): readonly [number, number, number] {
-  return variant === "cockpit-v7"
-    ? COCKPIT_V7_MASCOT_FACE_TARGETS[zone]
-    : COCKPIT_MASCOT_FACE_TARGETS[zone];
-}
-
-/**
- * Maps a `ZoneId` (LangGraph contract) to a `MascotStationId` (face/pose
- * lookup). `gallery` is the historical alias for the back-wall zone and
- * shares the `projects` station.
- */
-function zoneToStation(zone: ZoneId): MascotStationId {
-  switch (zone) {
-    case "gallery":
-    case "projects":
-      return "projects";
-    case "experience":
-      return "experience";
-    case "skills":
-      return "skills";
-    case "contact":
-      return "contact";
-    default:
-      return "hub";
-  }
-}
 
 /**
  * Per-frame mascot motion: lerp toward the target zone, breathe bob,
@@ -66,12 +29,10 @@ export function useMascotLocomotion({
   groupRef,
   hovered,
   hoverOffset,
-  variant,
 }: {
   groupRef: RefObject<THREE.Group | null>;
   hovered: boolean;
   hoverOffset: number;
-  variant: WorldVariant;
 }): void {
   const reduceMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
@@ -93,15 +54,13 @@ export function useMascotLocomotion({
     if (!g) return;
 
     const desiredZoneId = targetZone ?? currentZone;
-    const [zx, zy, zz] = isCockpitVariant(variant)
-      ? cockpitPosition(variant, desiredZoneId)
-      : ZONES[desiredZoneId].position;
+    const [zx, zy, zz] = COCKPIT_V7_MASCOT_POSITIONS[desiredZoneId];
 
     // Breath bob + lateral sway so idle reads as *alive*, not frozen.
     const t = state.clock.elapsedTime;
     const bob = Math.sin(t * 1.3) * 0.07;
     const sway = Math.sin(t * 0.6) * 0.03;
-    const flying = isCockpitVariant(variant) && mascotState === "moving";
+    const flying = mascotState === "moving";
     const liftTarget = flying ? (specialMotion ? 0.58 : 0.34) : 0;
     travelLiftRef.current = THREE.MathUtils.damp(
       travelLiftRef.current,
@@ -112,9 +71,7 @@ export function useMascotLocomotion({
     targetVec.current.set(zx + sway, zy + hoverOffset + bob + travelLiftRef.current, zz);
 
     if (specialMotion?.kind === "orbit") {
-      const orbitPosition = isCockpitVariant(variant)
-        ? cockpitPosition(variant, specialMotion.target)
-        : ZONES[specialMotion.target].position;
+      const orbitPosition = COCKPIT_V7_MASCOT_POSITIONS[specialMotion.target];
       const duration = specialMotion.revolutions * 2.4;
       const progress = (performance.now() - specialMotion.startedAt) / 1000 / duration;
       if (progress >= 1) {
@@ -145,8 +102,7 @@ export function useMascotLocomotion({
     if (reduceMotion) {
       pos.copy(targetVec.current);
     } else {
-      const movementRate =
-        isCockpitVariant(variant) && mascotState === "moving" ? 1.95 : POSITION_RATE;
+      const movementRate = mascotState === "moving" ? 1.95 : POSITION_RATE;
       const k = 1 - Math.exp(-movementRate * dt);
       pos.lerp(targetVec.current, k);
     }
@@ -156,28 +112,21 @@ export function useMascotLocomotion({
 
     // Arrival detection — settle once close enough to the destination.
     if (targetZone !== null) {
-      const [tx, , tz] = isCockpitVariant(variant)
-        ? cockpitPosition(variant, targetZone)
-        : ZONES[targetZone].position;
+      const [tx, , tz] = COCKPIT_V7_MASCOT_POSITIONS[targetZone];
       const dx = pos.x - tx;
       const dz = pos.z - tz;
       if (dx * dx + dz * dz < ARRIVAL_DIST_SQ) arriveAtZone();
     }
 
     // Yaw lerp — face the station's `faceTarget` in world space.
-    const station = MASCOT_STATIONS[zoneToStation(desiredZoneId)];
-    let [fx, , fz] = isCockpitVariant(variant)
-      ? cockpitFaceTarget(variant, desiredZoneId)
-      : station.faceTarget;
+    let [fx, , fz] = COCKPIT_V7_MASCOT_FACE_TARGETS[desiredZoneId];
     if (pointTarget) {
       if (performance.now() - pointTarget.startedAt > 1600) {
         clearMascotPoint();
       } else if (pointTarget.target === "user") {
         [fx, fz] = [0, 10];
       } else {
-        const pointPosition = isCockpitVariant(variant)
-          ? cockpitPosition(variant, pointTarget.target)
-          : ZONES[pointTarget.target].position;
+        const pointPosition = COCKPIT_V7_MASCOT_POSITIONS[pointTarget.target];
         [fx, fz] = [pointPosition[0], pointPosition[2]];
       }
     }
@@ -188,24 +137,21 @@ export function useMascotLocomotion({
     g.rotation.y = currentYaw + delta * yawK;
 
     // Hover affordance — small scale lift while cursor is on the mascot.
-    const stationScale =
-      variant === "cockpit-v7"
-        ? isMobile
-          ? desiredZoneId === "experience" || desiredZoneId === "skills"
-            ? 0.64
-            : desiredZoneId === "projects" || desiredZoneId === "gallery"
-              ? 0.72
-              : desiredZoneId === "contact"
-                ? 0.52
-                : 0.78
-          : desiredZoneId === "experience" || desiredZoneId === "skills"
-            ? 0.58
-            : desiredZoneId === "projects" || desiredZoneId === "gallery"
-              ? 0.84
-              : desiredZoneId === "contact"
-                ? 0.55
-                : 1
-        : 1;
+    const stationScale = isMobile
+      ? desiredZoneId === "experience" || desiredZoneId === "skills"
+        ? 0.64
+        : desiredZoneId === "projects" || desiredZoneId === "gallery"
+          ? 0.72
+          : desiredZoneId === "contact"
+            ? 0.52
+            : 0.78
+      : desiredZoneId === "experience" || desiredZoneId === "skills"
+        ? 0.58
+        : desiredZoneId === "projects" || desiredZoneId === "gallery"
+          ? 0.84
+          : desiredZoneId === "contact"
+            ? 0.55
+            : 1;
     const target = (hovered ? HOVER_SCALE_TARGET : 1) * stationScale;
     const scaleK = reduceMotion ? 1 : 1 - Math.exp(-HOVER_SCALE_RATE * dt);
     hoverScaleRef.current += (target - hoverScaleRef.current) * scaleK;

@@ -163,13 +163,13 @@ canvas {
 /* Cockpit displays are embedded avionics, not floating holograms. The DOM
    controls share the same dense, squared-off industrial language as the
    physical Blender bezels and control strips. */
-html[data-world="cockpit"] {
+html {
   --holo-bg: rgb(4 13 17 / 92%);
   --holo-edge: rgb(103 211 229 / 44%);
 }
 
-html[data-world="cockpit"] .holo-surface,
-html[data-world="cockpit"] .holo-chip {
+html .holo-surface,
+html .holo-chip {
   border-color: rgb(112 190 200 / 34%);
   border-radius: 4px;
   background:
@@ -182,13 +182,13 @@ html[data-world="cockpit"] .holo-chip {
   -webkit-backdrop-filter: blur(10px);
 }
 
-html[data-world="cockpit"] .holo-link-stack {
+html .holo-link-stack {
   border-block: 1px solid rgb(107 199 211 / 20%);
   background: rgb(3 11 14 / 80%);
   color: #a8e7ef;
 }
 
-html[data-world="cockpit"] .holo-link-row {
+html .holo-link-row {
   min-height: 42px;
   padding: 7px 10px;
   border-left: 3px solid transparent;
@@ -197,26 +197,26 @@ html[data-world="cockpit"] .holo-link-row {
   letter-spacing: 0.025em;
 }
 
-html[data-world="cockpit"] .holo-link-row + .holo-link-row {
+html .holo-link-row + .holo-link-row {
   border-top-color: rgb(124 207 217 / 16%);
 }
 
-html[data-world="cockpit"] .holo-link-row:hover {
+html .holo-link-row:hover {
   border-left-color: #efaa65;
   background: rgb(91 189 203 / 10%);
 }
 
-html[data-world="cockpit"] .holo-link-glyph {
+html .holo-link-glyph {
   color: #efaa65;
 }
 
-html[data-world="cockpit"] .holo-link-copy {
+html .holo-link-copy {
   border: 1px solid rgb(115 210 221 / 25%);
   border-radius: 2px;
   color: #9bdae3;
 }
 
-html[data-world="cockpit"] .holo-open-link {
+html .holo-open-link {
   gap: 8px;
   padding: 7px 13px;
   border: 1px solid rgb(108 215 231 / 52%);
@@ -230,7 +230,7 @@ html[data-world="cockpit"] .holo-open-link {
     inset 0 1px 0 rgb(226 251 250 / 10%);
 }
 
-html[data-world="cockpit"] .holo-open-link:hover {
+html .holo-open-link:hover {
   background: linear-gradient(180deg, rgb(30 75 82 / 98%), rgb(9 34 40 / 98%));
   transform: none;
 }
