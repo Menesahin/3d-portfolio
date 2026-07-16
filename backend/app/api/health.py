@@ -12,16 +12,12 @@ doesn't restart it. The probe itself stays cheap — no upstream LLM
 ping (would be slow + cost money on every probe; a startup-time smoke
 test in `lifespan` is the better place for that).
 """
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response, status
 
 from app.core.config import settings
-from app.deps import get_graph
-
-if TYPE_CHECKING:
-    from langgraph.pregel import Pregel
-
+from app.deps import CompiledGraph, get_graph
 
 router = APIRouter(tags=["health"])
 
@@ -40,12 +36,12 @@ async def version() -> dict[str, str]:
 @router.get("/ready")
 async def ready(
     response: Response,
-    graph: Annotated["Pregel", Depends(get_graph)],
+    graph: Annotated[CompiledGraph, Depends(get_graph)],
 ) -> dict[str, object]:
     """Readiness probe — green only if the agent can serve a real turn."""
     checks = {
         "graph": graph is not None,
-        "checkpointer": getattr(graph, "checkpointer", None) is not None,
+        "checkpointer": bool(getattr(graph, "checkpointer", None)),
         "llm_key": bool(settings.llm_api_key),
     }
     all_ready = all(checks.values())

@@ -5,12 +5,12 @@ known gotcha). Tools emit a structured UI event through the stream and
 return a ToolMessage so the LLM sees a clean confirmation.
 """
 
-from typing import Annotated
+from typing import Annotated, Any, TypeAlias
 
 from langchain_core.messages import ToolMessage
 from langchain_core.tools import InjectedToolCallId, tool
 from langgraph.config import get_stream_writer
-from langgraph.types import Command
+from langgraph.types import Command as LangGraphCommand
 
 from app.agent.events import (
     CameraFocus,
@@ -49,6 +49,10 @@ from app.agent.events import (
     WorldReset,
     ZoneId,
 )
+
+# This alias is also constructed at runtime in `_ack`, so it cannot use the
+# Python 3.13 `type` statement (which creates a non-callable TypeAliasType).
+Command: TypeAlias = LangGraphCommand[Any]  # noqa: UP040
 
 
 def _emit(event: UiEvent) -> None:

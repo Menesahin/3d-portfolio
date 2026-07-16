@@ -13,19 +13,17 @@ Provider abstraction lives in `_make_model()` — dispatch on
 """
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING
 
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt import create_react_agent
+from pydantic import SecretStr
 
 from app.agent.prompts import PERSONA
 from app.agent.tools import ALL_TOOLS
 from app.core.config import settings
-
-if TYPE_CHECKING:
-    from langgraph.pregel import Pregel
+from app.deps import CompiledGraph
 
 
 def _make_model() -> BaseChatModel:
@@ -34,7 +32,7 @@ def _make_model() -> BaseChatModel:
     if settings.llm_provider == "openai":
         return ChatOpenAI(
             model=settings.llm_model,
-            api_key=settings.llm_api_key,
+            api_key=SecretStr(settings.llm_api_key),
             temperature=settings.llm_temperature,
             max_retries=3,
             timeout=settings.llm_timeout,
@@ -42,7 +40,7 @@ def _make_model() -> BaseChatModel:
             # Bound a single LLM reply so a jailbroken/runaway response
             # cannot drain the model's full 16k+ output budget. Raise via
             # env (LLM_MAX_OUTPUT_TOKENS) if a future tool dumps long prose.
-            max_tokens=settings.llm_max_output_tokens,
+            max_completion_tokens=settings.llm_max_output_tokens,
             # Append a final AIMessageChunk carrying usage_metadata
             # (input/output/total tokens) at end-of-stream. LangChain
             # forwards OpenAI's `stream_options={"include_usage": true}`
@@ -52,7 +50,7 @@ def _make_model() -> BaseChatModel:
     raise ValueError(f"unknown llm_provider: {settings.llm_provider}")
 
 
-def build_compiled_graph() -> "Pregel":
+def build_compiled_graph() -> CompiledGraph:
     """Build and compile the agent graph. Call once at app startup.
 
     Owns the checkpointer's lifetime: each call constructs a fresh
@@ -71,7 +69,7 @@ def build_compiled_graph() -> "Pregel":
 
 
 @asynccontextmanager
-async def build_graph() -> AsyncIterator["Pregel"]:
+async def build_graph() -> AsyncIterator[CompiledGraph]:
     """Async-CM wrapper so `main.py`'s lifespan stays uniform when we later
     switch to checkpointers that need an async context (Redis/Postgres)."""
     graph = build_compiled_graph()

@@ -10,12 +10,14 @@ import re
 import time
 import uuid
 from collections.abc import AsyncIterator
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from app.agent.events import ChatRequest, ChatSuggestions, DoneEvent, ErrorEvent, TokenEvent
 from app.agent.fallback_suggestions import derive as derive_fallback_suggestions
@@ -23,11 +25,7 @@ from app.agent.memory import register_thread
 from app.core.config import settings
 from app.core.logging import log
 from app.core.rate_limit import CHAT_LIMITS, limiter
-from app.deps import get_graph
-
-if TYPE_CHECKING:
-    from langgraph.pregel import Pregel
-
+from app.deps import CompiledGraph, get_graph
 
 router = APIRouter(tags=["chat"])
 
@@ -38,7 +36,7 @@ SSE_HEADERS = {
 }
 
 
-def _sse(event: str, data: dict | str) -> str:
+def _sse(event: str, data: dict[str, Any] | str) -> str:
     payload = data if isinstance(data, str) else json.dumps(data, ensure_ascii=False)
     return f"event: {event}\ndata: {payload}\n\n"
 
@@ -94,7 +92,7 @@ def _sanitise_user_content(content: str) -> tuple[str, bool]:
     return collapsed, matched
 
 
-def _to_lc_messages(req: ChatRequest) -> list:
+def _to_lc_messages(req: ChatRequest) -> list[Any]:
     """Convert incoming role/content pairs to LangChain messages.
 
     User content is run through `_sanitise_user_content` first so chat-
@@ -102,7 +100,7 @@ def _to_lc_messages(req: ChatRequest) -> list:
     sees them. Assistant + system roles in the request are echoes of prior
     server-emitted content (replayed history) and are left untouched.
     """
-    out: list = []
+    out: list[Any] = []
     for m in req.messages:
         if m.role == "user":
             cleaned, matched = _sanitise_user_content(m.content)
@@ -125,7 +123,7 @@ def _to_lc_messages(req: ChatRequest) -> list:
 async def chat(
     request: Request,
     body: ChatRequest,
-    graph: Annotated["Pregel", Depends(get_graph)],
+    graph: Annotated[CompiledGraph, Depends(get_graph)],
 ) -> StreamingResponse:
     # Prefer the id minted by `RequestIdMiddleware` so the SSE `ready`
     # frame, the structlog binding, and the wire `X-Request-Id` header
@@ -143,7 +141,7 @@ async def chat(
     # Pregel exposes its checkpointer via the `.checkpointer` attribute.
     # We register the thread for LRU bookkeeping so abandoned sessions
     # eventually get evicted instead of growing the saver forever.
-    if graph.checkpointer is not None:
+    if isinstance(graph.checkpointer, BaseCheckpointSaver):
         register_thread(graph.checkpointer, thread_id)
         # Watchdog: warn when a thread's persisted history grows past the
         # configured cap. Pydantic already caps each *inbound* body at 20
@@ -169,7 +167,7 @@ async def chat(
             log.exception("chat.thread_history_check_failed", thread_id=thread_id)
     log.info("chat.start", msg_count=len(body.messages))
 
-    config = {
+    config: RunnableConfig = {
         "configurable": {"thread_id": thread_id},
         "metadata": {"request_id": request_id, "thread_id": thread_id},
         "tags": ["chat"],
@@ -178,13 +176,13 @@ async def chat(
         # tool loops if the model misbehaves. Tunable via LLM_RECURSION_LIMIT.
         "recursion_limit": settings.llm_recursion_limit,
     }
-    inputs = {"messages": _to_lc_messages(body)}
+    inputs: dict[str, list[Any]] = {"messages": _to_lc_messages(body)}
 
     async def generator() -> AsyncIterator[str]:
         # Track state across the stream so we can synthesise a safety-net
         # `chat.suggestions` event if the LLM forgets to call the tool.
         saw_suggestions = False
-        last_content_event: dict | None = None
+        last_content_event: dict[str, Any] | None = None
         # Token-usage accumulator. With `stream_usage=True` on ChatOpenAI,
         # a final AIMessageChunk arrives carrying `usage_metadata`. Multi-
         # turn tool loops produce one usage chunk per LLM call — sum them
@@ -206,7 +204,7 @@ async def chat(
             async for chunk in graph.astream(
                 inputs,
                 config=config,
-                stream_mode=["messages", "custom"],
+                stream_mode=("messages", "custom"),
             ):
                 if time.monotonic() >= deadline:
                     timed_out = True

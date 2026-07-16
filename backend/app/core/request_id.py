@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, cast
 
 Scope = dict[str, Any]
 Message = dict[str, Any]
@@ -59,7 +59,8 @@ class RequestIdMiddleware:
 
 def _inbound_request_id(scope: Scope) -> str | None:
     """Return the inbound X-Request-Id header, sanitised."""
-    for name, value in scope.get("headers", []):
+    headers = cast(list[tuple[bytes, bytes]], scope.get("headers", []))
+    for name, value in headers:
         if name == _HEADER_NAME:
             try:
                 candidate = value.decode("latin-1").strip()

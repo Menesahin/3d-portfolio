@@ -23,6 +23,7 @@ running summary), out of v1 scope.
 from collections import deque
 from contextlib import suppress
 from threading import Lock
+from typing import Any
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
 
@@ -37,7 +38,7 @@ _recent_threads: deque[str] = deque()
 _thread_lock = Lock()
 
 
-def register_thread(saver: BaseCheckpointSaver, thread_id: str) -> None:
+def register_thread(saver: BaseCheckpointSaver[Any], thread_id: str) -> None:
     """Mark `thread_id` as the most-recently-used. If we now hold more
     threads than `MAX_THREADS`, evict the oldest via the supplied saver.
     Idempotent on existing thread_ids (touch-to-front)."""
